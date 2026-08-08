@@ -1,0 +1,20 @@
+services:
+  backend:
+    build: .
+    ports:
+      - "8000:8000"
+    volumes:
+      - ./chroma_db:/app/chroma_db
+    env_file:
+      - .env
+    environment:
+      - CHROMA_PATH=/app/chroma_db
+
+  frontend:
+    build: ./examforge-frontend
+    ports:
+      - "3000:3000"
+    environment:
+      - NEXT_PUBLIC_API_URL=http://localhost:8000
+    depends_on:
+      - backend
