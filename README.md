@@ -8,19 +8,13 @@ ExamForge allows users to upload study material, process it into a searchable kn
 
 ## 🚀 Live Demo
 
-> Deployment in progress.
+ExamForge is fully deployed with the React frontend hosted on Vercel and the FastAPI backend deployed separately.
 
 | Service | Platform | Link |
 |---|---|---|
-| Frontend | Vercel | Coming Soon |
-| Backend API | Northflank | Coming Soon |
-
-<!--
-Update after deployment:
-
-Frontend Demo: ADD_VERCEL_DEPLOYMENT_LINK_HERE
-Backend API: ADD_NORTHFLANK_DEPLOYMENT_LINK_HERE
--->
+| Frontend | Vercel | [Launch ExamForge](https://exam-forge-ai.vercel.app) |
+| Backend API | Code.Run | [Open API Health Check](https://p01--examforge-ai-cqw7qvc7vd22.code.run/health) |
+| API Documentation | FastAPI Swagger | [View Interactive API Docs](https://p01--examforge-ai-cqw7qvc7vd22.code.run/docs) |
 
 ---
 
@@ -283,7 +277,31 @@ If the application cannot find relevant information in the document, it returns 
 │ + Source References       │
 └───────────────────────────┘
 ```
+---
 
+# 📸 Application Screenshots
+
+## 🏠 ExamForge Home
+
+![ExamForge Home](assets/screenshots/examforge-home.png)
+
+The landing interface provides a clear overview of the RAG-powered study assistant and guides users through the PDF upload and question-answering workflow.
+
+---
+
+## 📄 PDF Upload and Document-Grounded Answers
+
+![PDF Upload and AI Answer](assets/screenshots/examforge-pdf-upload-answer.png)
+
+Users can upload PDF study material, process it into a searchable knowledge base, and ask questions in natural language. Generated responses are grounded in the uploaded document and include source references.
+
+---
+
+## 🔌 Interactive API Documentation
+
+![Swagger API Documentation](assets/screenshots/swagger-docs.png)
+
+The FastAPI backend exposes interactive Swagger documentation, allowing API endpoints to be explored and tested directly.
 ---
 
 # 🛠️ Tech Stack
@@ -329,7 +347,7 @@ If the application cannot find relevant information in the document, it returns 
 | Source References | Yes |
 | Docker Support | Yes |
 | Frontend/Backend Separation | Yes |
-| Deployment Plan | Vercel + Northflank |
+| Deployment | Vercel + Code.Run |
 
 ---
 
@@ -621,40 +639,6 @@ docker-compose up --build
 
 ---
 
-# 🌐 Deployment
-
-ExamForge is planned to use a split deployment architecture.
-
-## Frontend Deployment
-
-**Platform:** Vercel
-
-```text
-React + Vite
-      ↓
-    Vercel
-```
-
-**Live Demo:** Coming Soon
-
----
-
-## Backend Deployment
-
-**Platform:** Northflank
-
-```text
-FastAPI + RAG Pipeline
-          ↓
-       Docker
-          ↓
-      Northflank
-```
-
-**Live API:** Coming Soon
-
----
-
 ## Planned Production Architecture
 
 ```text
@@ -679,6 +663,27 @@ FastAPI + RAG Pipeline
           │ ChromaDB  │ │ LangChain  │ │   Groq    │
           │  Vectors  │ │ RAG Logic  │ │    LLM    │
           └───────────┘ └────────────┘ └───────────┘
+```
+---
+
+# 🌐 Deployment
+
+ExamForge uses a split deployment architecture with the frontend and backend deployed independently.
+
+## Frontend
+
+**Platform:** Vercel
+
+The React + Vite frontend is deployed as a production web application.
+
+**Live Application:** [Launch ExamForge](https://exam-forge-ai.vercel.app)
+
+```text
+React + Vite
+      ↓
+    Vercel
+      ↓
+Production Web Application
 ```
 
 ---
