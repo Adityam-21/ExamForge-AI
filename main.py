@@ -19,12 +19,14 @@ async def health():
     }
 
 
+origins = [
+    "http://localhost:5173",
+    "https://exam-forge-ai.vercel.app",
+]
+
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=[
-        "http://localhost:5173",
-        "https://exam-forge-ai.vercel.app"
-    ],
+    allow_origins=origins,
     allow_credentials=True,
     allow_methods=["*"],
     allow_headers=["*"],
