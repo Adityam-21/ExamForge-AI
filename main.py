@@ -9,12 +9,21 @@ from app.services.agent import examforge_graph
 
 app = FastAPI()
 
+
+@app.get("/health")
+async def health():
+    return {
+        "status": "healthy",
+        "sessions": len(memory_store),
+        "uploaded_sessions": len(uploaded_sessions),
+    }
+
+
 app.add_middleware(
     CORSMiddleware,
     allow_origins=[
         "http://localhost:5173",
         "http://127.0.0.1:5173",
-        "https://YOUR-VERCEL-FRONTEND.vercel.app",
     ],
     allow_credentials=True,
     allow_methods=["*"],
@@ -91,17 +100,27 @@ async def ask(request: AskRequest):
     if session_id not in uploaded_sessions:
         raise HTTPException(status_code=400, detail="No PDF uploaded for this session")
 
-    result = examforge_graph.invoke(
-        {
-            "session_id": session_id,
-            "question": request.question,
-            "memory": memory_store[session_id],
-            "context": [],
-            "answer": "",
-            "citations": [],
+    try:
+        result = examforge_graph.invoke(
+            {
+                "session_id": session_id,
+                "question": request.question,
+                "memory": memory_store[session_id],
+                "context": [],
+                "answer": "",
+                "citations": [],
+            }
+        )
+
+        memory_store[session_id] = result.get("memory", [])
+
+        return {
+            "answer": result.get("answer", ""),
+            "citations": result.get("citations", []),
         }
-    )
 
-    memory_store[session_id] = result["memory"]
-
-    return {"answer": result["answer"], "citations": result["citations"]}
+    except Exception as e:
+        print(f"ASK ERROR: {type(e).__name__}: {str(e)}")
+        raise HTTPException(
+            status_code=500, detail=f"Error processing question: {str(e)}"
+        )
