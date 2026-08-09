@@ -13,8 +13,8 @@ ExamForge is fully deployed with the React frontend hosted on Vercel and the Fas
 | Service | Platform | Link |
 |---|---|---|
 | Frontend | Vercel | [Launch ExamForge](https://exam-forge-ai.vercel.app) |
-| Backend API | Code.Run | [Open API Health Check](https://p01--examforge-ai-cqw7qvc7vd22.code.run/health) |
-| API Documentation | FastAPI Swagger | [View Interactive API Docs](https://p01--examforge-ai-cqw7qvc7vd22.code.run/docs) |
+| Backend API | Code.Run | [Open API Health Check](https://p01--examforge-ai--cqw7qvc7vd22.code.run/health) |
+| API Documentation | FastAPI Swagger | [View Interactive API Docs](https://p01--examforge-ai--cqw7qvc7vd22.code.run/docs) |
 
 ---
 
