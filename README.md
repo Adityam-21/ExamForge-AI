@@ -1,785 +1,331 @@
 # ExamForge
 
-> An AI-powered Retrieval-Augmented Generation (RAG) study assistant that transforms static PDF study material into an interactive question-answering experience.
+> A retrieval-augmented study assistant. Upload your own material, ask questions in natural language, and get answers that are grounded in those documents and cited back to the page.
 
-ExamForge allows users to upload study material, process it into a searchable knowledge base, and ask questions in natural language. Instead of answering purely from general model knowledge, the application retrieves relevant information from the uploaded document and generates responses grounded in that context.
+ExamForge is a conversational AI application built around a multi-strategy RAG pipeline. Answers are generated only from material the user uploads, every citation is derived from the actual retrieved passage rather than from the model's prose, and the interface reports the real retrieval work happening behind each answer.
 
 ---
 
-## 🚀 Live Demo
-
-ExamForge is fully deployed with the React frontend hosted on Vercel and the FastAPI backend deployed separately.
+## Live
 
 | Service | Platform | Link |
 |---|---|---|
-| Frontend | Vercel | [Launch ExamForge](https://exam-forge-ai.vercel.app) |
-| Backend API | Code.Run | [Open API Health Check](https://p01--examforge-ai--cqw7qvc7vd22.code.run/health) |
-| API Documentation | FastAPI Swagger | [View Interactive API Docs](https://p01--examforge-ai--cqw7qvc7vd22.code.run/docs) |
+| Frontend | Vercel | [exam-forge-ai.vercel.app](https://exam-forge-ai.vercel.app) |
+| Backend API | Northflank | [/health](https://p01--examforge-ai--cqw7qvc7vd22.code.run/health) |
+| API reference | FastAPI / OpenAPI | [/docs](https://p01--examforge-ai--cqw7qvc7vd22.code.run/docs) |
 
 ---
 
-## ✨ Key Features
+## What it does
 
-- 📄 Upload and process PDF study material
-- 🧠 Retrieval-Augmented Generation (RAG) pipeline
-- 🔍 Semantic search using vector embeddings
-- 💬 Ask questions in natural language
-- 📚 Answers grounded in the uploaded document
-- 🚫 Handles questions whose answers are not present in the material
-- 🔗 Source references included with generated responses
-- ⚡ FastAPI backend with RESTful API endpoints
-- 🎨 Modern React frontend
-- 🗂️ Session-based document workflow
-- 🧬 ChromaDB vector database integration
-- 🤖 Groq-powered LLM inference
-- 🐳 Docker support for backend containerization
-- 📱 Responsive and polished user interface
+**Retrieval**
+- Dense retrieval over sentence-transformer embeddings (`BAAI/bge-small-en-v1.5`)
+- BM25 sparse keyword retrieval over the same chunk set
+- Hybrid fusion of dense + sparse via `EnsembleRetriever` with reciprocal rank fusion
+- Multi-Query expansion — an LLM rewrites the question into several phrasings
+- HyDE — an LLM drafts a hypothetical textbook answer and that is embedded instead of the question, closing the vocabulary gap between casual questions and academic prose
+- Union deduplication across all strategies
+- FlashRank cross-encoder reranking of every surviving candidate
+- Per-strategy fault tolerance: a transient LLM failure degrades retrieval quality instead of failing the request
+
+**Grounding and evidence**
+- Page-level citations built deterministically from the reranked chunks
+- Retrieved passages exposed in the UI with document, page, excerpt and match strength
+- Explicit distinction between passages the answer *cited* and other passages *reviewed*
+- Answers flagged as unsupported when no valid citation was used or retrieval scored below threshold
+- Explicit refusal when the material does not contain the answer
+
+**Conversation**
+- LangGraph orchestration: `condense → retrieve → generate`
+- Conversation memory via question condensation against recent turns
+- Multiple conversations per session, each with its own transcript, sharing one document set
+- Full transcript persisted, so a refresh or redeploy does not lose history
+
+**Interface**
+- Streamed answers over Server-Sent Events with token-level rendering
+- Live activity trace reporting genuine pipeline stages
+- Markdown rendering with headings, lists, tables, code blocks and LaTeX
+- Copy, regenerate, stop generation, and per-error retry
+- Document library with per-document removal
+- Light and dark themes, responsive from mobile to desktop
 
 ---
 
-# 📌 Overview
-
-Traditional study material is static. Finding a specific concept inside a long PDF can be time-consuming, especially when users need quick answers from their own notes or syllabus.
-
-**ExamForge solves this by turning uploaded study material into an interactive knowledge source.**
-
-The application processes the document, converts its contents into vector embeddings, stores them in a vector database, and retrieves the most relevant information whenever the user asks a question.
-
-The overall workflow is:
+## Architecture
 
 ```text
-Upload PDF
-    ↓
-Extract Document Content
-    ↓
-Split Content into Chunks
-    ↓
-Generate Vector Embeddings
-    ↓
-Store in ChromaDB
-    ↓
-User Asks a Question
-    ↓
-Retrieve Relevant Context
-    ↓
-LLM Generates Grounded Answer
-    ↓
-Return Answer with Source References
-```
-
----
-
-# 🏗️ Architecture
-
-ExamForge follows a decoupled frontend-backend architecture.
-
-```text
-                         ┌──────────────────────┐
-                         │    React Frontend    │
-                         │                      │
-                         │  • Upload PDF        │
-                         │  • Ask Questions     │
-                         │  • Display Answers   │
-                         └──────────┬───────────┘
-                                    │
-                              REST API / HTTP
-                                    │
+┌──────────────────────────── React + Vite (Vercel) ────────────────────────────┐
+│  App shell · conversation thread · activity trace · source cards · composer   │
+│  useReducer state  ·  SSE client  ·  localStorage session + theme             │
+└───────────────────────────────────┬───────────────────────────────────────────┘
+                                    │  REST + Server-Sent Events
                                     ▼
-                         ┌──────────────────────┐
-                         │   FastAPI Backend    │
-                         │                      │
-                         │  • Session Handling  │
-                         │  • PDF Processing    │
-                         │  • RAG Pipeline      │
-                         └──────────┬───────────┘
-                                    │
-                    ┌───────────────┼────────────────┐
-                    │               │                │
-                    ▼               ▼                ▼
-             ┌────────────┐  ┌────────────┐  ┌────────────┐
-             │ PDF Parser │  │  ChromaDB  │  │  Groq LLM  │
-             │ & Chunking │  │Vector Store│  │ Inference  │
-             └────────────┘  └────────────┘  └────────────┘
+┌──────────────────────────── FastAPI (Northflank) ─────────────────────────────┐
+│                                                                               │
+│  /api/sessions   /api/…/documents   /api/…/conversations   /api/…/ask/stream  │
+│                                    │                                          │
+│                    ┌───────────────▼────────────────┐                          │
+│                    │      LangGraph StateGraph      │                          │
+│                    │  condense → retrieve → generate│                          │
+│                    └───────────────┬────────────────┘                          │
+│                                    │                                           │
+│   ┌────────────────────────────────▼──────────────────────────────────┐        │
+│   │                        Retrieval pipeline                          │       │
+│   │   Dense ─┐                                                         │       │
+│   │   BM25  ─┴─► RRF ensemble ─┐                                       │       │
+│   │   Multi-Query ─────────────┼─► dedupe ─► FlashRank rerank ─► top-k │       │
+│   │   HyDE ────────────────────┘                                       │       │
+│   └────────────────────────────────┬──────────────────────────────────┘        │
+│                                    │                                           │
+│         ┌──────────────────────────┼──────────────────────────┐                │
+│         ▼                          ▼                          ▼                │
+│   ┌───────────┐            ┌──────────────┐            ┌───────────┐           │
+│   │  ChromaDB │            │    SQLite    │            │  Groq LLM │           │
+│   │  vectors  │            │ conversations│            │ inference │           │
+│   │ (volume)  │            │  (volume)    │            │           │           │
+│   └───────────┘            └──────────────┘            └───────────┘           │
+└───────────────────────────────────────────────────────────────────────────────┘
 ```
 
----
+### Session model
 
-# 🧠 How the RAG Pipeline Works
+A **session** owns a Chroma collection (the uploaded documents). A session holds many **conversations**, each with its own transcript. That split is what allows starting a new conversation without re-uploading material.
 
-The core functionality of ExamForge is based on **Retrieval-Augmented Generation**.
+### How citations stay trustworthy
 
-## 1. Document Upload
+The generation step does **not** report its own citation metadata. Instead:
 
-The user uploads a PDF from the React frontend.
+1. Reranked chunks are numbered `1..N` and passed to the model with their source and page.
+2. The model writes plain markdown, citing with `[1]`, `[2]`.
+3. Citation objects are built from the **actual chunks**, and each is flagged with whether the answer really cited it.
+4. Markers referring to numbers outside the source list map to nothing and cannot fabricate a source.
 
-```text
-User
-  ↓
-React Frontend
-  ↓
-FastAPI Backend
-```
+Every filename and page number a user sees originates from document metadata written at ingest time. Because the answer is plain markdown rather than a JSON envelope, it can also be streamed token by token.
 
-A session is used to associate the uploaded material with the user's subsequent questions.
+### Activity trace
 
----
-
-## 2. Document Processing
-
-The backend extracts the textual content from the uploaded PDF.
-
-```text
-PDF
- ↓
-Text Extraction
- ↓
-Raw Document Content
-```
-
-The extracted content is prepared for further processing.
+Stages shown in the UI (`understanding`, `searching`, `expanding`, `reranking`, `generating`) are emitted by the pipeline itself as it executes. No hidden model reasoning is exposed, requested, or simulated — the labels describe application work.
 
 ---
 
-## 3. Text Chunking
+## Tech stack
 
-A complete document is often too large to send directly to an LLM.
-
-The document is therefore divided into smaller chunks.
-
-```text
-Document
-   ↓
-┌─────────┐
-│ Chunk 1 │
-├─────────┤
-│ Chunk 2 │
-├─────────┤
-│ Chunk 3 │
-├─────────┤
-│   ...   │
-└─────────┘
-```
-
-This allows the application to retrieve only the most relevant parts of the document for a specific question.
-
----
-
-## 4. Embedding Generation
-
-Each text chunk is converted into a vector representation.
-
-Embeddings capture the semantic meaning of the text, allowing the system to perform similarity-based retrieval instead of relying only on exact keyword matches.
-
-For example, a user can ask:
-
-> What topics are covered in the syllabus?
-
-Even if the exact words "topics are covered" do not appear in the document, the embedding-based retrieval system can still locate semantically relevant content.
-
----
-
-## 5. Vector Storage
-
-The generated embeddings are stored in **ChromaDB**.
-
-```text
-Document Chunks
-       ↓
-Generate Embeddings
-       ↓
-ChromaDB Vector Store
-```
-
-The vector database acts as the searchable knowledge base for the uploaded document.
-
----
-
-## 6. Question Processing
-
-When the user asks a question, the application retrieves the most relevant document chunks.
-
-```text
-User Question
-      ↓
-Question Embedding
-      ↓
-Semantic Similarity Search
-      ↓
-Relevant Document Chunks
-```
-
----
-
-## 7. Context-Grounded Answer Generation
-
-The retrieved document context is combined with the user's question and sent to the LLM.
-
-```text
-User Question
-        +
-Retrieved Context
-        ↓
-     Groq LLM
-        ↓
-Grounded Answer
-        ↓
-Source References
-```
-
-The goal is to ensure that responses are generated from information retrieved from the uploaded material.
-
-If the application cannot find relevant information in the document, it returns an appropriate response instead of presenting unrelated information as if it came from the user's material.
-
----
-
-# 🎨 Application Workflow
-
-```text
-┌───────────────────────────┐
-│      Upload Material      │
-│                           │
-│        Select PDF         │
-└─────────────┬─────────────┘
-              │
-              ▼
-┌───────────────────────────┐
-│    Process Document       │
-│                           │
-│  Extract + Chunk + Embed  │
-└─────────────┬─────────────┘
-              │
-              ▼
-┌───────────────────────────┐
-│      Document Ready       │
-│                           │
-│ Knowledge Base Available  │
-└─────────────┬─────────────┘
-              │
-              ▼
-┌───────────────────────────┐
-│     Ask a Question        │
-│                           │
-│    Natural Language       │
-└─────────────┬─────────────┘
-              │
-              ▼
-┌───────────────────────────┐
-│    Retrieve Context       │
-│                           │
-│  Vector Similarity Search │
-└─────────────┬─────────────┘
-              │
-              ▼
-┌───────────────────────────┐
-│      AI Response          │
-│                           │
-│ Grounded in Document      │
-│ + Source References       │
-└───────────────────────────┘
-```
----
-
-# 📸 Application Screenshots
-
-## 🏠 ExamForge Home
-
-![ExamForge Home](assets/screenshots/examforge-home.png)
-
-The landing interface provides a clear overview of the RAG-powered study assistant and guides users through the PDF upload and question-answering workflow.
-
----
-
-## 📄 PDF Upload and Document-Grounded Answers
-
-![PDF Upload and AI Answer](assets/screenshots/examforge-pdf-upload-answer.png)
-
-Users can upload PDF study material, process it into a searchable knowledge base, and ask questions in natural language. Generated responses are grounded in the uploaded document and include source references.
-
----
-
-## 🔌 Interactive API Documentation
-
-![Swagger API Documentation](assets/screenshots/swagger-docs.png)
-
-The FastAPI backend exposes interactive Swagger documentation, allowing API endpoints to be explored and tested directly.
----
-
-# 🛠️ Tech Stack
-
-## Frontend
-
-| Technology | Purpose |
+| Layer | Technology |
 |---|---|
-| React | User interface development |
-| Vite | Frontend build tooling |
-| JavaScript | Application logic |
-| CSS | Custom styling and responsive design |
-| Axios | Frontend-backend API communication |
-
-## Backend
-
-| Technology | Purpose |
-|---|---|
-| Python | Core backend language |
-| FastAPI | REST API development |
-| Uvicorn | ASGI application server |
-| LangChain | RAG workflow orchestration |
-| ChromaDB | Vector database |
-| Groq | LLM inference |
-| Docker | Backend containerization |
+| Frontend | React 19, Vite 8, plain CSS with design tokens |
+| Markdown / math | react-markdown, remark-gfm, remark-math, rehype-katex |
+| Icons | lucide-react |
+| Frontend state | `useReducer` + context (no external state library) |
+| Transport | `fetch` + Server-Sent Events |
+| API | FastAPI, Uvicorn |
+| Orchestration | LangGraph, LangChain |
+| Vector store | ChromaDB (disk-persisted) |
+| Embeddings | sentence-transformers, `BAAI/bge-small-en-v1.5` |
+| Sparse retrieval | rank_bm25 |
+| Reranking | FlashRank cross-encoder |
+| LLM inference | Groq (`openai/gpt-oss-120b` generation, `llama-3.1-8b-instant` query transformation) |
+| Conversation store | SQLite via stdlib `sqlite3` |
+| PDF parsing | pypdf |
+| Container | Docker |
 
 ---
 
-# 📊 Project Highlights
-
-| Category | Implementation |
-|---|---|
-| Application Type | Full-stack AI/RAG application |
-| Input Format | PDF documents |
-| Frontend | React + Vite |
-| Backend | FastAPI |
-| RAG Framework | LangChain |
-| Vector Database | ChromaDB |
-| LLM Inference | Groq |
-| Retrieval Method | Semantic similarity search |
-| Embedding-Based Search | Yes |
-| Session-Based Workflow | Yes |
-| Source References | Yes |
-| Docker Support | Yes |
-| Frontend/Backend Separation | Yes |
-| Deployment | Vercel + Code.Run |
-
----
-
-# 📂 Project Structure
+## Project structure
 
 ```text
 examforge/
-│
 ├── app/
-│   └── Backend application modules
-│
-├── chroma_db/
-│   └── ChromaDB vector storage
-│
+│   ├── core/
+│   │   ├── config.py            env-driven settings
+│   │   └── store.py             SQLite persistence
+│   ├── services/
+│   │   ├── ingestion.py         PDF parsing, chunking, embedding, chunk cache
+│   │   ├── retrieval.py         4 strategies, fusion, reranking, stage callbacks
+│   │   └── agent.py             LangGraph graph, deterministic citations, streaming
+│   └── api/
+│       ├── routes.py            /api resource endpoints + SSE
+│       ├── legacy.py            original /session, /upload, /ask shims
+│       └── schemas.py           request/response models
 ├── examforge-frontend/
-│   │
 │   ├── src/
-│   │   ├── components/
-│   │   │   ├── Header.jsx
-│   │   │   └── UploadSection.jsx
-│   │   │
-│   │   ├── services/
-│   │   │   └── api.js
-│   │   │
+│   │   ├── components/          Composer, MessageList, Message, Markdown,
+│   │   │                        SourcePanel, ActivityTrace, Sidebar, EmptyState
+│   │   ├── lib/api.js           API client + SSE reader
+│   │   ├── state/AppContext.jsx reducer + actions
+│   │   ├── styles/              tokens.css, app.css
 │   │   ├── App.jsx
-│   │   ├── App.css
-│   │   ├── index.css
 │   │   └── main.jsx
-│   │
-│   ├── package.json
+│   ├── .env.example
+│   ├── vercel.json
 │   └── vite.config.js
-│
+├── tests/test_api_integration.py
+├── main.py
 ├── Dockerfile
 ├── docker-compose.yml
-├── main.py
 ├── requirements.txt
-├── .env.example
-├── .gitignore
-└── README.md
+└── .env.example
 ```
 
 ---
 
-# 🔌 API Workflow
+## API
 
-ExamForge follows a session-based workflow to manage document interactions.
+Resource endpoints are under `/api`. The original flat endpoints still work and return their original shapes.
 
-## Step 1 — Create Session
+### Sessions
+| Method | Path | Purpose |
+|---|---|---|
+| `POST` | `/api/sessions` | Create a session |
+| `GET` | `/api/sessions/{id}` | Documents + conversations, for client rehydration |
 
-Before processing a document, the frontend initializes a session.
+### Documents
+| Method | Path | Purpose |
+|---|---|---|
+| `GET` | `/api/sessions/{id}/documents` | List documents |
+| `POST` | `/api/sessions/{id}/documents` | Upload and ingest a PDF (multipart) |
+| `DELETE` | `/api/sessions/{id}/documents/{docId}` | Remove one document and its vectors |
 
-```text
-Frontend
-   ↓
-Create Session Request
-   ↓
-FastAPI Backend
-   ↓
-Session Created
-```
+### Conversations
+| Method | Path | Purpose |
+|---|---|---|
+| `GET` | `/api/sessions/{id}/conversations` | List conversations |
+| `POST` | `/api/sessions/{id}/conversations` | Start a conversation |
+| `PATCH` | `/api/conversations/{id}` | Rename |
+| `DELETE` | `/api/conversations/{id}` | Delete |
+| `GET` | `/api/conversations/{id}/messages` | Full transcript with citations |
 
-The session is then used to associate the uploaded document and subsequent questions.
+### Ask
+| Method | Path | Purpose |
+|---|---|---|
+| `POST` | `/api/conversations/{id}/ask/stream` | SSE: stages, sources, tokens |
+| `POST` | `/api/conversations/{id}/ask` | Non-streaming fallback |
 
----
+Both accept `{ "question": "...", "replace_message_id": null }`. Supplying `replace_message_id` regenerates: that message and everything after it is discarded and the preceding user turn is reused.
 
-## Step 2 — Upload and Process Document
+### Stream events
 
-```text
-Frontend
-   ↓
-Upload PDF
-   ↓
-FastAPI
-   ↓
-Extract Text
-   ↓
-Split into Chunks
-   ↓
-Generate Embeddings
-   ↓
-Store in ChromaDB
-   ↓
-Document Ready
-```
-
----
-
-## Step 3 — Ask a Question
-
-```text
-Frontend
-   ↓
-Submit Question
-   ↓
-FastAPI
-   ↓
-Retrieve Relevant Chunks
-   ↓
-Provide Context to LLM
-   ↓
-Generate Answer
-   ↓
-Return Response + Sources
-```
-
----
-
-# 🧪 Testing
-
-The application was manually tested across multiple document types and question scenarios.
-
-## Tested Scenarios
-
-| Scenario | Status |
+| Event | Payload |
 |---|---|
-| Session initialization | ✅ Passed |
-| PDF selection | ✅ Passed |
-| PDF upload | ✅ Passed |
-| Document processing | ✅ Passed |
-| Vector database storage | ✅ Passed |
-| Relevant factual questions | ✅ Passed |
-| Document summary questions | ✅ Passed |
-| Skills and technology extraction | ✅ Passed |
-| Syllabus/content questions | ✅ Passed |
-| Questions outside document context | ✅ Correctly handled |
-| Source references | ✅ Returned |
-| Frontend-backend integration | ✅ Passed |
-| Groq LLM integration | ✅ Passed |
-| Responsive UI workflow | ✅ Passed |
+| `start` | `{ conversation_id }` |
+| `stage` | `{ stage, label }` |
+| `interpretation` | `{ question }` — the condensed form of a follow-up |
+| `sources` | `{ sources: [...] }` — retrieved passages, before generation |
+| `token` | `{ text }` |
+| `done` | `{ message_id, grounded, citations, created_at }` |
+| `error` | `{ message }` |
+
+### Legacy
+`POST /session`, `POST /upload?session_id=`, `POST /ask` — retained, marked deprecated in OpenAPI, implemented on the same pipeline.
 
 ---
 
-## Example: Relevant Question
+## Getting started
 
-**Question**
+**Prerequisites:** Python 3.11+, Node 20+, a Groq API key.
 
-```text
-What skills or technologies are mentioned in this document?
-```
-
-**Result**
-
-The application successfully retrieves relevant information from the uploaded document and generates an answer based on the technologies and skills present in that material.
-
----
-
-## Example: Question Outside the Document
-
-**Question**
-
-```text
-What is the capital of Japan?
-```
-
-**Result**
-
-```text
-I couldn't find this in your uploaded material.
-```
-
-This validates an important behavior of the application: the system is designed to answer from the uploaded material rather than treating every question as a general knowledge query.
-
----
-
-# 🚀 Getting Started
-
-## Prerequisites
-
-Make sure you have the following installed:
-
-- Python 3.12 or higher
-- Node.js 18 or higher
-- npm
-- Git
-- Docker (optional)
-
-You will also need a valid API key for the LLM service used by the backend.
-
----
-
-# ⚙️ Backend Setup
-
-## 1. Clone the Repository
+### Backend
 
 ```bash
-git clone YOUR_REPOSITORY_URL
-cd examforge
-```
-
----
-
-## 2. Create a Virtual Environment
-
-### Windows
-
-```bash
-python -m venv .venv
-.venv\Scripts\activate
-```
-
-### macOS/Linux
-
-```bash
-python3 -m venv .venv
-source .venv/bin/activate
-```
-
----
-
-## 3. Install Dependencies
-
-```bash
+python -m venv .venv && source .venv/bin/activate   # Windows: .venv\Scripts\activate
 pip install -r requirements.txt
-```
-
----
-
-## 4. Configure Environment Variables
-
-Create a `.env` file based on the provided `.env.example`.
-
-Example:
-
-```env
-GROQ_API_KEY=your_api_key_here
-```
-
-> Never commit real API keys or secrets to version control.
-
----
-
-## 5. Start the Backend
-
-```bash
+cp .env.example .env        # add your GROQ_API_KEY
 uvicorn main:app --reload
 ```
 
-The backend will start locally and expose the API endpoints for the frontend.
+API at `http://localhost:8000`, interactive docs at `/docs`.
 
-FastAPI's interactive API documentation is also available through the local server's `/docs` endpoint.
+First start downloads the embedding model (~130 MB). Reranker weights download on the first question.
 
----
-
-# 🎨 Frontend Setup
-
-Open a new terminal and navigate to the frontend directory:
+### Frontend
 
 ```bash
 cd examforge-frontend
-```
-
-Install dependencies:
-
-```bash
 npm install
-```
-
-Start the development server:
-
-```bash
+cp .env.example .env        # VITE_API_URL=http://localhost:8000
 npm run dev
 ```
 
-The Vite development server will start the React application locally.
-
----
-
-# 🐳 Docker
-
-The backend includes Docker configuration for containerized deployment.
-
-Build the image:
+### Docker
 
 ```bash
-docker build -t examforge .
+docker compose up --build
 ```
 
-Run the container:
+Brings up the API on `:8000` and the Vite dev server on `:5173`, with a named volume for vectors and conversation history.
+
+### Tests
 
 ```bash
-docker run -p 8000:8000 --env-file .env examforge
+python tests/test_api_integration.py
 ```
 
-If using Docker Compose:
-
-```bash
-docker-compose up --build
-```
+Exercises the real app, routers and store with only the embedding and LLM boundaries stubbed: upload validation, SSE framing and stage ordering, citation integrity, persistence, memory fidelity, regenerate truncation, session rehydration, document deletion, and legacy endpoint compatibility.
 
 ---
 
-## Planned Production Architecture
+## Configuration
 
-```text
-                      ┌──────────────────┐
-                      │      Vercel      │
-                      │  React Frontend  │
-                      └────────┬─────────┘
-                               │
-                            REST API
-                               │
-                               ▼
-                      ┌──────────────────┐
-                      │    Northflank    │
-                      │ FastAPI Backend  │
-                      │   RAG Pipeline   │
-                      └────────┬─────────┘
-                               │
-                ┌──────────────┼──────────────┐
-                │              │              │
-                ▼              ▼              ▼
-          ┌───────────┐ ┌────────────┐ ┌───────────┐
-          │ ChromaDB  │ │ LangChain  │ │   Groq    │
-          │  Vectors  │ │ RAG Logic  │ │    LLM    │
-          └───────────┘ └────────────┘ └───────────┘
-```
----
+| Variable | Default | Purpose |
+|---|---|---|
+| `GROQ_API_KEY` | — | **Required.** LLM inference |
+| `DATA_DIR` | `data` | Root for vectors + database |
+| `CHROMA_PATH` | `data/chroma` | Vector store location |
+| `DATABASE_PATH` | `data/examforge.db` | Conversation store |
+| `CORS_ORIGINS` | localhost + Vercel | Comma-separated allowed origins |
+| `CORS_ORIGIN_REGEX` | Vercel previews | Regex for preview deployments |
+| `EMBEDDING_MODEL` | `BAAI/bge-small-en-v1.5` | Embeddings |
+| `UTILITY_MODEL` | `llama-3.1-8b-instant` | Query transformation |
+| `GENERATION_MODEL` | `openai/gpt-oss-120b` | Answer generation |
+| `RETRIEVER_K` | `5` | Per-strategy retrieval depth |
+| `RERANK_TOP_N` | `5` | Chunks kept after reranking |
+| `MIN_RELEVANCE_SCORE` | `0.05` | Below this, answers are flagged unsupported |
+| `MEMORY_WINDOW` | `6` | Turns fed to question condensation |
+| `CHUNK_SIZE` / `CHUNK_OVERLAP` | `512` / `50` | Chunking |
+| `MAX_UPLOAD_MB` | `10` | Upload limit |
 
-# 🌐 Deployment
-
-ExamForge uses a split deployment architecture with the frontend and backend deployed independently.
-
-## Frontend
-
-**Platform:** Vercel
-
-The React + Vite frontend is deployed as a production web application.
-
-**Live Application:** [Launch ExamForge](https://exam-forge-ai.vercel.app)
-
-```text
-React + Vite
-      ↓
-    Vercel
-      ↓
-Production Web Application
-```
+Frontend: `VITE_API_URL` only.
 
 ---
 
-# 🔒 Environment Variables
+## Deployment
 
-The application uses environment variables to manage sensitive configuration.
+**Backend (Northflank).** Build from the `Dockerfile`. Mount a persistent volume at `/app/data` so vectors and conversation history survive redeploys. Set `GROQ_API_KEY` and `CORS_ORIGINS`. Run one worker — the embedding model and reranker are in-process and the stores are local files.
 
-Example:
-
-```env
-GROQ_API_KEY=your_api_key_here
-```
-
-Do not expose secrets in:
-
-- Public repositories
-- Frontend source code
-- Screenshots
-- Documentation
-- Client-side variables
+**Frontend (Vercel).** Root directory `examforge-frontend`, framework preset Vite. Set `VITE_API_URL` to the backend URL. `vercel.json` handles SPA rewrites.
 
 ---
 
-# 🎯 Engineering Concepts Demonstrated
+## Engineering notes
 
-This project demonstrates practical implementation of:
+Decisions and trade-offs worth calling out:
 
-- Retrieval-Augmented Generation (RAG)
-- Semantic search
-- Vector embeddings
-- Vector databases
-- Document ingestion
-- Text chunking
-- Context retrieval
-- Grounded AI responses
-- Large Language Model integration
-- Prompt-context architecture
-- REST API development
-- FastAPI backend development
-- React frontend development
-- Frontend-backend communication
-- Session-based application workflows
-- Environment-based configuration
-- Docker containerization
-- Full-stack AI application development
+- **Citations are derived, not declared.** Generation previously returned a JSON envelope containing its own citation metadata, which meant page numbers could be invented and a single unparseable response returned HTTP 500. Numbering the chunks and parsing markers back to them removed both the trust problem and the parsing fragility, and made token streaming possible.
+- **SQLite over in-memory dicts.** Conversation state previously lived in module-level dicts, so a redeploy 404'd every active session while leaving orphaned Chroma collections on disk. Stdlib `sqlite3` on the same volume as the vector store fixed persistence without adding a dependency or a service.
+- **Streaming stages are real.** Progress events are emitted by the pipeline as it runs, not simulated on a timer. This matters because the pipeline genuinely takes time: several LLM round trips plus reranking.
+- **BM25 index is cached per session.** Previously every question dumped the whole collection from Chroma and rebuilt the index. The cache is invalidated whenever a session's documents change.
+- **Retrieval strategies fail independently.** A Multi-Query or HyDE timeout degrades recall instead of failing the request.
+- **Legacy endpoints retained.** The published API contract still works, implemented over the same pipeline rather than duplicated.
 
 ---
 
-# 🔮 Future Improvements
+## Not implemented
 
-Potential future enhancements include:
+Stated plainly, because none of this is in the codebase:
 
-- [ ] Support for multiple documents per session
-- [ ] Support for DOCX and TXT files
-- [ ] Persistent user accounts
-- [ ] Authentication and authorization
-- [ ] Chat history
-- [ ] Conversation memory
-- [ ] Streaming AI responses
-- [ ] Page-level citations
-- [ ] Improved document metadata
-- [ ] Hybrid search
-- [ ] Metadata filtering
-- [ ] Reranking for improved retrieval
-- [ ] RAG evaluation pipeline
-- [ ] Automated backend testing
-- [ ] Automated frontend testing
-- [ ] Production monitoring
-- [ ] Cloud-based persistent vector storage
+- **Authentication.** There are no user accounts. A session id is an unguessable UUID, and anyone holding one can access that session. Fine for a demo; not a multi-tenant security model.
+- **Metadata filtering.** Metadata is attached and displayed but never used to constrain retrieval.
+- **RAG evaluation.** No offline evaluation harness or retrieval quality metrics.
+- **Non-PDF ingestion.** PDF only. Scanned/image-only PDFs are rejected with a clear message rather than OCR'd.
+- **Frontend test suite.** The SSE client and store logic are covered by the integration tests; there are no component tests.
+- **Horizontal scale.** Single-worker by design (in-process models, local file stores). Scaling out would need a shared vector service and a networked database.
+- **Monitoring.** Structured logging and a health endpoint only; no metrics or tracing backend.
 
 ---
 
-# 👨‍💻 Author
+## Author
 
-**Kumar Adityam**
+**Kumar Adityam** — [GitHub](https://github.com/Adityam-21) · [LinkedIn](https://www.linkedin.com/in/kumar-adityam)
 
-Aspiring AI/ML Engineer with a background in backend development and a focus on building practical, end-to-end AI applications.
+## License
 
-- GitHub: https://github.com/Adityam-21
-- LinkedIn: https://www.linkedin.com/in/kumar-adityam
-
----
-
-# 📄 License
-
-This project is licensed under the MIT License.
-
----
-
-<div align="center">
-
-### Turn your study material into instant understanding.
-
-**Upload. Retrieve. Understand.**
-
-⭐ If you found this project interesting, consider starring the repository.
-
-</div>
+MIT.

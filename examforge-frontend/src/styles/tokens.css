@@ -1,0 +1,175 @@
+/* ============================================================================
+   ExamForge design tokens
+   ----------------------------------------------------------------------------
+   Identity: a cool, low-chroma slate workspace with a single iris accent.
+   Dark-first. Depth comes from tonal steps, hairline borders and spacing -
+   not gradients, glass or glow.
+
+   Typography is deliberately distinctive: IBM Plex Sans for the interface,
+   IBM Plex Serif for answer prose (long-form study reading), IBM Plex Mono for
+   code and numerics. The serif reading column is the strongest identity signal
+   and separates ExamForge from the sans-everywhere chatbot convention.
+   ========================================================================== */
+
+:root {
+  /* --- Type ------------------------------------------------------------- */
+  --font-ui: "IBM Plex Sans", -apple-system, BlinkMacSystemFont, "Segoe UI",
+    Roboto, Helvetica, Arial, sans-serif;
+  --font-read: "IBM Plex Serif", Georgia, "Times New Roman", serif;
+  --font-mono: "IBM Plex Mono", ui-monospace, SFMono-Regular, Menlo, Consolas,
+    monospace;
+
+  --t-2xs: 0.6875rem;
+  --t-xs: 0.75rem;
+  --t-sm: 0.8125rem;
+  --t-md: 0.875rem;
+  --t-base: 0.9375rem;
+  --t-read: 1.0125rem;
+  --t-lg: 1.0625rem;
+  --t-xl: 1.3125rem;
+  --t-2xl: 1.625rem;
+  --t-3xl: 2.0625rem;
+
+  --lh-tight: 1.22;
+  --lh-snug: 1.45;
+  --lh-body: 1.6;
+  --lh-read: 1.72;
+
+  --tr-tight: -0.019em;
+  --tr-wide: 0.055em;
+
+  /* --- Space ------------------------------------------------------------ */
+  --s-1: 0.25rem;
+  --s-2: 0.5rem;
+  --s-3: 0.75rem;
+  --s-4: 1rem;
+  --s-5: 1.25rem;
+  --s-6: 1.5rem;
+  --s-7: 1.75rem;
+  --s-8: 2rem;
+  --s-10: 2.5rem;
+  --s-12: 3rem;
+  --s-16: 4rem;
+
+  /* --- Radii: tight and technical -------------------------------------- */
+  --r-xs: 3px;
+  --r-sm: 5px;
+  --r-md: 7px;
+  --r-lg: 10px;
+  --r-pill: 999px;
+
+  /* --- Layout ---------------------------------------------------------- */
+  --rail-w: 258px;
+  --read-w: 44rem;
+
+  /* --- Motion ---------------------------------------------------------- */
+  --ease: cubic-bezier(0.33, 0.72, 0.11, 1);
+  --d-1: 110ms;
+  --d-2: 190ms;
+  --d-3: 320ms;
+
+  /* --- Z --------------------------------------------------------------- */
+  --z-rail: 40;
+  --z-scrim: 35;
+  --z-float: 20;
+}
+
+/* ============================================================================
+   Dark (default) — cool slate, near-black with a blue cast
+   ========================================================================== */
+
+:root,
+[data-theme="dark"] {
+  color-scheme: dark;
+
+  --bg: #0b0d13;
+  --surface: #101319;
+  --surface-2: #161a23;
+  --surface-3: #1d222d;
+  --hover: rgba(180, 196, 230, 0.055);
+  --pressed: rgba(180, 196, 230, 0.095);
+
+  --text: #e7eaf2;
+  --text-2: #a4acbe;
+  --text-3: #737d92;
+  --text-4: #545d70;
+  --on-accent: #0b0d13;
+
+  --line: #1f2430;
+  --line-2: #2b3241;
+  --line-soft: #171b24;
+
+  --accent: #7c84ff;
+  --accent-hi: #9aa1ff;
+  --accent-lo: #5a63e8;
+  --accent-wash: rgba(124, 132, 255, 0.11);
+  --accent-edge: rgba(124, 132, 255, 0.3);
+  --accent-text: #a6acff;
+
+  --ok: #4fb98a;
+  --ok-wash: rgba(79, 185, 138, 0.12);
+  --warn: #d0a04a;
+  --warn-wash: rgba(208, 160, 74, 0.1);
+  --warn-edge: rgba(208, 160, 74, 0.26);
+  --bad: #e0757a;
+  --bad-wash: rgba(224, 117, 122, 0.1);
+  --bad-edge: rgba(224, 117, 122, 0.26);
+
+  --sh-1: 0 1px 2px rgba(0, 0, 0, 0.4);
+  --sh-2: 0 6px 20px rgba(0, 0, 0, 0.42);
+  --sh-3: 0 18px 46px rgba(0, 0, 0, 0.55);
+
+  --ring: 0 0 0 2px var(--bg), 0 0 0 4px var(--accent-edge);
+}
+
+/* ============================================================================
+   Light — cool paper, same accent family
+   ========================================================================== */
+
+[data-theme="light"] {
+  color-scheme: light;
+
+  /* Cool slate canvas - the content surface sits ABOVE it, so panels read as
+     lifted paper without needing heavy shadows. Nothing here is pure white. */
+  --bg: #eef0f5;
+  --surface: #f8f9fc;
+  --surface-2: #e7eaf1;
+  --surface-3: #dde1ea;
+  --hover: rgba(24, 32, 52, 0.05);
+  --pressed: rgba(24, 32, 52, 0.09);
+
+  /* Four-tier text ramp, all AA-readable on the surfaces they appear on.
+     text-3 (metadata / activity / hints) is the tier that was failing before;
+     it now clears 4.5:1 on the content surface. text-4 is disabled-only. */
+  --text: #161922;
+  --text-2: #454d5f;
+  --text-3: #646c7e;
+  --text-4: #8b93a3;
+  --on-accent: #ffffff;
+
+  --line: #d3d8e3;
+  --line-2: #bcc3d1;
+  --line-soft: #e0e4ec;
+
+  --accent: #4048cc;
+  --accent-hi: #333bbe;
+  --accent-lo: #333bbe;
+  --accent-wash: rgba(64, 72, 204, 0.08);
+  --accent-edge: rgba(64, 72, 204, 0.32);
+  --accent-text: #3138b8;
+
+  --ok: #237552;
+  --ok-wash: rgba(35, 117, 82, 0.12);
+  --warn: #7a5810;
+  --warn-wash: rgba(122, 88, 16, 0.11);
+  --warn-edge: rgba(122, 88, 16, 0.3);
+  --bad: #a32f35;
+  --bad-wash: rgba(163, 47, 53, 0.09);
+  --bad-edge: rgba(163, 47, 53, 0.26);
+
+  --sh-1: 0 1px 2px rgba(20, 23, 31, 0.05);
+  --sh-2: 0 4px 14px rgba(20, 23, 31, 0.08);
+  --sh-3: 0 16px 40px rgba(20, 23, 31, 0.14);
+
+  --ring: 0 0 0 2px var(--bg), 0 0 0 4px var(--accent-edge);
+}

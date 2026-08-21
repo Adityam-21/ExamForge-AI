@@ -1,192 +1,190 @@
-import { useEffect, useState } from "react";
-import "./App.css";
+import { useCallback, useEffect, useState } from "react";
+import { AlertCircle, PanelLeft, PanelLeftClose, Plus } from "lucide-react";
 
-import Header from "./components/Header";
-import UploadSection from "./components/UploadSection";
-import QuestionSection from "./components/QuestionSection";
-import Footer from "./components/Footer";
+import Composer from "./components/Composer";
+import MessageList from "./components/MessageList";
+import Sidebar from "./components/Sidebar";
+import { BrandMark, Wordmark } from "./components/Brand";
+import { NoDocuments, NoMessages } from "./components/EmptyState";
+import { useActions, useAppState } from "./state/AppContext";
 
-import {
-  askQuestion,
-  createSession,
-  uploadFile,
-} from "./services/api";
+const THEME_KEY = "examforge.theme";
 
-function App() {
-  const [sessionId, setSessionId] = useState("");
-  const [sessionError, setSessionError] = useState("");
-
-  const [selectedFile, setSelectedFile] = useState(null);
-  const [uploadStatus, setUploadStatus] = useState("idle");
-  const [uploadMessage, setUploadMessage] = useState("");
-
-  const [question, setQuestion] = useState("");
-  const [answer, setAnswer] = useState("");
-  const [askStatus, setAskStatus] = useState("idle");
-  const [askError, setAskError] = useState("");
+function useTheme() {
+  const [theme, setTheme] = useState(() => {
+    const stored = localStorage.getItem(THEME_KEY);
+    if (stored === "light" || stored === "dark") return stored;
+    return window.matchMedia?.("(prefers-color-scheme: light)").matches
+      ? "light"
+      : "dark";
+  });
 
   useEffect(() => {
-    async function initializeSession() {
-      try {
-        const data = await createSession();
+    document.documentElement.dataset.theme = theme;
+    localStorage.setItem(THEME_KEY, theme);
+  }, [theme]);
 
-        setSessionId(data.session_id);
-        setSessionError("");
-      } catch (error) {
-        console.error(error);
+  const toggle = useCallback(
+    () => setTheme((value) => (value === "dark" ? "light" : "dark")),
+    []
+  );
 
-        setSessionError(
-          "Unable to connect to the backend. Please make sure the backend server is running."
-        );
-      }
-    }
+  return [theme, toggle];
+}
 
-    initializeSession();
-  }, []);
-
-  function handleFileChange(event) {
-    const file = event.target.files?.[0];
-
-    if (!file) {
-      return;
-    }
-
-    if (file.type !== "application/pdf") {
-      setSelectedFile(null);
-      setUploadStatus("error");
-      setUploadMessage("Please select a valid PDF file.");
-      return;
-    }
-
-    setSelectedFile(file);
-    setUploadStatus("idle");
-    setUploadMessage("");
-    setAnswer("");
-    setAskError("");
-  }
-
-  async function handleUpload() {
-    if (!selectedFile || !sessionId) {
-      return;
-    }
-
-    try {
-      setUploadStatus("uploading");
-      setUploadMessage("");
-
-      const data = await uploadFile(sessionId, selectedFile);
-
-      setUploadStatus("success");
-
-      setUploadMessage(
-        data.message ||
-        "Your document has been processed successfully. You can now ask questions."
-      );
-    } catch (error) {
-      console.error(error);
-
-      setUploadStatus("error");
-      setUploadMessage(
-        error.message || "Something went wrong while uploading the PDF."
-      );
-    }
-  }
-
-  async function handleAsk() {
-    if (!question.trim() || !sessionId) {
-      return;
-    }
-
-    try {
-      setAskStatus("loading");
-      setAskError("");
-      setAnswer("");
-
-      const data = await askQuestion(sessionId, question.trim());
-
-      setAnswer(data.answer || "No answer was returned.");
-      setAskStatus("success");
-    } catch (error) {
-      console.error(error);
-
-      setAskStatus("error");
-      setAskError(
-        error.message || "Unable to generate an answer. Please try again."
-      );
-    }
-  }
-
-  const isDocumentReady = uploadStatus === "success";
-
+function Booting() {
   return (
-    <div className="app-shell">
-      <Header />
-
-      <main className="main-content">
-        <section className="hero-section">
-          <div className="hero-content">
-            <span className="eyebrow">RAG-POWERED STUDY ASSISTANT</span>
-
-            <h1>
-              Turn your study material into
-              <span> instant answers.</span>
-            </h1>
-
-            <p>
-              Upload your exam material, ask questions in natural language,
-              and get answers grounded in your document.
-            </p>
-          </div>
-
-          <div className="hero-stats">
-            <div className="stat-card">
-              <strong>PDF</strong>
-              <span>Upload notes</span>
-            </div>
-
-            <div className="stat-card">
-              <strong>AI</strong>
-              <span>Context-aware answers</span>
-            </div>
-
-            <div className="stat-card">
-              <strong>RAG</strong>
-              <span>Document-grounded</span>
-            </div>
-          </div>
-        </section>
-
-        {sessionError && (
-          <div className="global-error">
-            <strong>Connection issue:</strong> {sessionError}
-          </div>
-        )}
-
-        <div className="workspace">
-          <UploadSection
-            selectedFile={selectedFile}
-            uploadStatus={uploadStatus}
-            uploadMessage={uploadMessage}
-            onFileChange={handleFileChange}
-            onUpload={handleUpload}
-            disabled={!sessionId}
-          />
-
-          <QuestionSection
-            question={question}
-            answer={answer}
-            askStatus={askStatus}
-            askError={askError}
-            isDocumentReady={isDocumentReady}
-            onQuestionChange={setQuestion}
-            onAsk={handleAsk}
-          />
-        </div>
-      </main>
-
-      <Footer />
+    <div className="screen">
+      <BrandMark size={26} className="screen__mark" />
+      <p className="screen__text">Connecting to ExamForge</p>
+      <div className="screen__bar" aria-hidden="true">
+        <span />
+      </div>
     </div>
   );
 }
 
-export default App;
+function BootFailed({ error, onRetry }) {
+  return (
+    <div className="screen">
+      <AlertCircle size={22} className="screen__icon-error" aria-hidden="true" />
+      <h2 className="screen__title">Can&apos;t reach the server</h2>
+      <p className="screen__text">{error}</p>
+      <button type="button" className="btn btn--primary" onClick={onRetry}>
+        Try again
+      </button>
+    </div>
+  );
+}
+
+export default function App() {
+  const state = useAppState();
+  const actions = useActions();
+  const [theme, toggleTheme] = useTheme();
+  const [drawerOpen, setDrawerOpen] = useState(false);
+  const [railHidden, setRailHidden] = useState(false);
+
+  useEffect(() => {
+    const onKey = (event) => {
+      if (event.key === "Escape") setDrawerOpen(false);
+    };
+    window.addEventListener("keydown", onKey);
+    return () => window.removeEventListener("keydown", onKey);
+  }, []);
+
+  if (state.boot === "loading") return <Booting />;
+  if (state.boot === "error") {
+    return <BootFailed error={state.bootError} onRetry={actions.retryBoot} />;
+  }
+
+  const hasDocs = state.documents.length > 0;
+  const busy = Boolean(state.stream);
+  const hasMessages = state.messages.length > 0;
+  const active = state.conversations.find((c) => c.id === state.activeId);
+
+  const totalPages = state.documents.reduce(
+    (sum, doc) => sum + (doc.page_count || 0),
+    0
+  );
+
+  return (
+    <div className={`shell ${railHidden ? "shell--rail-hidden" : ""}`}>
+      <Sidebar
+        open={drawerOpen}
+        onClose={() => setDrawerOpen(false)}
+        theme={theme}
+        onToggleTheme={toggleTheme}
+      />
+
+      <main className="main">
+        <header className="topbar">
+          <button
+            type="button"
+            className="btn-icon topbar__drawer"
+            onClick={() => setDrawerOpen(true)}
+            aria-label="Open navigation"
+          >
+            <PanelLeft size={17} />
+          </button>
+
+          <button
+            type="button"
+            className="btn-icon topbar__rail"
+            onClick={() => setRailHidden((value) => !value)}
+            aria-label={railHidden ? "Show sidebar" : "Hide sidebar"}
+            title={railHidden ? "Show sidebar" : "Hide sidebar"}
+          >
+            {railHidden ? <PanelLeft size={17} /> : <PanelLeftClose size={17} />}
+          </button>
+
+          <div className="topbar__brand">
+            <BrandMark size={17} className="topbar__mark" />
+            <Wordmark />
+          </div>
+
+          <div className="topbar__center">
+            {hasMessages && active?.title && (
+              <span className="topbar__title" title={active.title}>
+                {active.title}
+              </span>
+            )}
+          </div>
+
+          <div className="topbar__meta">
+            {hasDocs && (
+              <span
+                className="chip chip--quiet"
+                title="Material indexed for retrieval"
+              >
+                <span className="chip__dot" aria-hidden="true" />
+                {state.documents.length} doc
+                {state.documents.length === 1 ? "" : "s"}
+                {totalPages ? ` · ${totalPages}p` : ""}
+              </span>
+            )}
+            <button
+              type="button"
+              className="btn-icon"
+              onClick={actions.newConversation}
+              aria-label="New conversation"
+              title="New conversation"
+            >
+              <Plus size={17} />
+            </button>
+          </div>
+        </header>
+
+        {!hasDocs ? (
+          <NoDocuments onUpload={actions.uploadDocuments} />
+        ) : (
+          <MessageList
+            key={state.activeId ?? "empty"}
+            messages={state.messages}
+            stream={state.stream}
+            streamError={state.streamError}
+            loading={state.messagesLoading}
+            onRegenerate={actions.regenerate}
+            onRetry={actions.retryLast}
+            header={
+              !hasMessages && !busy && !state.messagesLoading ? (
+                <NoMessages
+                  documents={state.documents}
+                  onPick={actions.sendMessage}
+                />
+              ) : null
+            }
+          />
+        )}
+
+        <Composer
+          onSend={actions.sendMessage}
+          onAttach={actions.uploadDocuments}
+          onStop={actions.stopGenerating}
+          busy={busy}
+          disabled={!hasDocs}
+          placeholder={hasDocs ? "Ask about your material…" : "Add a PDF to begin"}
+        />
+      </main>
+    </div>
+  );
+}

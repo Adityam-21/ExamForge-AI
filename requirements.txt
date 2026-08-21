@@ -1,37 +1,29 @@
-# API
+# --- API ---------------------------------------------------------------------
 fastapi==0.111.0
-uvicorn==0.30.1
+uvicorn[standard]==0.30.1
+python-multipart==0.0.9
+pydantic-settings==2.3.4
+python-dotenv==1.0.1
 
-# LangChain + LangGraph
+# --- Orchestration -----------------------------------------------------------
 langchain==0.2.17
 langchain-community==0.2.19
 langchain-core==0.2.43
+langchain-text-splitters==0.2.4
 langchain-groq==0.1.10
 langgraph==0.2.34
 
-# Embeddings + Vector DB
+# --- Embeddings + vector store -----------------------------------------------
 chromadb==0.5.5
 sentence-transformers==3.0.1
 
-# Retrieval + Reranking
+# --- Retrieval + reranking ---------------------------------------------------
 rank_bm25==0.2.2
 flashrank==0.2.8
 
-# PDF ingestion
+# --- PDF ingestion -----------------------------------------------------------
 pypdf==4.2.0
 
-# PDF generation
-reportlab==4.2.2
-
-# Evaluation
-ragas==0.1.19
-
-# LangSmith
-langsmith==0.1.147
-
-# Configuration
-python-dotenv==1.0.1
-pydantic-settings==2.3.4
-
-# Async file upload
-python-multipart==0.0.9
+# Removed: ragas (no evaluation pipeline exists), reportlab (no PDF generation),
+# langsmith (tracing was never configured). Conversation state now uses stdlib
+# sqlite3, so no database dependency is required.

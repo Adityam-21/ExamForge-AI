@@ -3,18 +3,31 @@ services:
     build: .
     ports:
       - "8000:8000"
-    volumes:
-      - ./chroma_db:/app/chroma_db
     env_file:
       - .env
     environment:
-      - CHROMA_PATH=/app/chroma_db
+      DATA_DIR: /app/data
+      CHROMA_PATH: /app/data/chroma
+      DATABASE_PATH: /app/data/examforge.db
+      CORS_ORIGINS: http://localhost:5173,http://127.0.0.1:5173
+    volumes:
+      - examforge-data:/app/data
 
+  # The frontend is a static Vite app deployed to Vercel in production.
+  # This service exists only for a full local stack: `docker compose up`.
   frontend:
-    build: ./examforge-frontend
+    image: node:22-alpine
+    working_dir: /app
+    command: sh -c "npm install && npm run dev -- --host 0.0.0.0"
     ports:
-      - "3000:3000"
+      - "5173:5173"
     environment:
-      - NEXT_PUBLIC_API_URL=http://localhost:8000
+      VITE_API_URL: http://localhost:8000
+    volumes:
+      - ./examforge-frontend:/app
+      - /app/node_modules
     depends_on:
       - backend
+
+volumes:
+  examforge-data:

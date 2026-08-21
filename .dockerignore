@@ -1,0 +1,13 @@
+.git
+.gitignore
+.venv
+__pycache__
+*.pyc
+.env
+data/
+chroma_db/
+examforge-frontend/node_modules
+examforge-frontend/dist
+tests/
+assets/
+README.md

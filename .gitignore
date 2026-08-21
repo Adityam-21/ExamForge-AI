@@ -1,9 +1,16 @@
 .env
+.env.local
+data/
 chroma_db/
 outputs/
 __pycache__/
 *.pyc
+.pytest_cache/
 .DS_Store
 .venv/
-.venv
 node_modules/
+dist/
+
+# Frontend local files
+.env.*
+!.env.example
