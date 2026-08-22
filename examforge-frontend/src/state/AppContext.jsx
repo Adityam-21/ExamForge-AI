@@ -246,8 +246,8 @@ export function AppProvider({ children }) {
           // The backend adopts unknown ids, so a stale id recovers rather than
           // dead-ending after a redeploy.
           const snapshot = await api.getSessionState(sessionId);
-          documents = snapshot.documents;
-          conversations = snapshot.conversations;
+          documents = Array.isArray(snapshot?.documents) ? snapshot.documents : [];
+          conversations = Array.isArray(snapshot?.conversations) ? snapshot.conversations : [];
         } else {
           const created = await api.createSession();
           sessionId = created.session_id;
