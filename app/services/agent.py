@@ -37,7 +37,8 @@ from app.services.retrieval import relevance_of, retrieve
 logger = logging.getLogger(__name__)
 
 NO_EVIDENCE_MESSAGE = (
-    "I couldn't find anything about this in your uploaded material."
+    "I couldn't find enough information in the uploaded material to answer that "
+    "question. Please ask something related to the document."
 )
 
 @lru_cache(maxsize=1)
@@ -180,7 +181,15 @@ def generation_node(state: ExamForgeState, config_: dict | None = None) -> ExamF
     chunks = state.get("context") or []
     question = state.get("search_query") or state["question"]
 
-    if not chunks:
+    # Abstention gate. Retrieval may return passages that are only weakly related
+    # to an off-topic question. The reranker already scored them; if not one
+    # passage clears MIN_RELEVANCE_SCORE, there is no real evidence, so we abstain
+    # BEFORE calling the generation LLM rather than letting it answer from weak
+    # context and labelling it after the fact. Borderline questions (at or above
+    # the threshold) still generate and still receive the existing grounded/
+    # low-confidence treatment downstream.
+    best_score = max((relevance_of(c) for c in chunks), default=0.0)
+    if not chunks or best_score < config.MIN_RELEVANCE_SCORE:
         emit("stage", {"stage": "generating", "label": "Generating answer"})
         emit("token", {"text": NO_EVIDENCE_MESSAGE})
         return {
