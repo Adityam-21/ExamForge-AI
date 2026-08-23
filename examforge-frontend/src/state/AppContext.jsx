@@ -19,6 +19,37 @@ import {
 
 import * as api from "../lib/api";
 
+/**
+ * Translate a failed request into an accurate, actionable message.
+ *
+ * The stream/list endpoints can fail for materially different reasons, and the
+ * old UI collapsed them all into "that answer didn't complete". Distinguishing
+ * them is honest and tells the user what to actually do - most importantly when
+ * the backend has lost the session (e.g. after a restart on ephemeral storage),
+ * where the document is still indexed client-side but the conversation is gone.
+ */
+function describeError(error) {
+  const status = error?.status;
+  const detail = (error?.message || "").toLowerCase();
+
+  if (status === 404 || detail.includes("not found")) {
+    if (detail.includes("session")) {
+      return "This conversation is no longer available on the server, so it can't continue. Start a new conversation to keep going — any indexed documents may also need re-uploading.";
+    }
+    return "This conversation is no longer available on the server. Start a new conversation to continue.";
+  }
+  if (status === 503 || status === 502 || status === 504) {
+    return "The server is temporarily unavailable. Please wait a moment and try again.";
+  }
+  if (status === 0) {
+    return "Can't reach the server. Check your connection and try again.";
+  }
+  if (status === 429) {
+    return "Too many requests right now. Please wait a moment and try again.";
+  }
+  return error?.message || "Something went wrong. Please try again.";
+}
+
 const SESSION_KEY = "examforge.session";
 const CONVERSATION_KEY = "examforge.conversation";
 
@@ -246,8 +277,8 @@ export function AppProvider({ children }) {
           // The backend adopts unknown ids, so a stale id recovers rather than
           // dead-ending after a redeploy.
           const snapshot = await api.getSessionState(sessionId);
-          documents = Array.isArray(snapshot?.documents) ? snapshot.documents : [];
-          conversations = Array.isArray(snapshot?.conversations) ? snapshot.conversations : [];
+          documents = snapshot.documents;
+          conversations = snapshot.conversations;
         } else {
           const created = await api.createSession();
           sessionId = created.session_id;
@@ -462,7 +493,7 @@ export function AppProvider({ children }) {
           finished = true;
         } else {
           finished = true;
-          dispatch({ type: "STREAM_FAIL", error: error.message });
+          dispatch({ type: "STREAM_FAIL", error: describeError(error) });
         }
       } finally {
         abortRef.current = null;
