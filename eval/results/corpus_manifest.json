@@ -1,0 +1,82 @@
+{
+  "session_id": "eval-corpus-v1",
+  "documents": [
+    {
+      "file": "jesc101.pdf",
+      "doc_id": "9d58fa614b2d1064",
+      "sha256_16": "9d58fa614b2d1064",
+      "page_count": 16,
+      "chunks_stored": 78
+    },
+    {
+      "file": "jesc102.pdf",
+      "doc_id": "8ce001e9cd1ab5f8",
+      "sha256_16": "8ce001e9cd1ab5f8",
+      "page_count": 20,
+      "chunks_stored": 92
+    },
+    {
+      "file": "jesc103.pdf",
+      "doc_id": "cda8ac2d0dfd6236",
+      "sha256_16": "cda8ac2d0dfd6236",
+      "page_count": 21,
+      "chunks_stored": 100
+    },
+    {
+      "file": "jesc105.pdf",
+      "doc_id": "685ec7228afeb79d",
+      "sha256_16": "685ec7228afeb79d",
+      "page_count": 21,
+      "chunks_stored": 120
+    },
+    {
+      "file": "jesc106.pdf",
+      "doc_id": "bf4ddfa158e117a7",
+      "sha256_16": "bf4ddfa158e117a7",
+      "page_count": 13,
+      "chunks_stored": 71
+    },
+    {
+      "file": "jesc109.pdf",
+      "doc_id": "a647d66cd9dd9e76",
+      "sha256_16": "a647d66cd9dd9e76",
+      "page_count": 27,
+      "chunks_stored": 137
+    },
+    {
+      "file": "jesc110.pdf",
+      "doc_id": "c8ed49fa55eedeb9",
+      "sha256_16": "c8ed49fa55eedeb9",
+      "page_count": 10,
+      "chunks_stored": 60
+    },
+    {
+      "file": "jesc111.pdf",
+      "doc_id": "640a680a24070d4a",
+      "sha256_16": "640a680a24070d4a",
+      "page_count": 24,
+      "chunks_stored": 107
+    },
+    {
+      "file": "jesc112.pdf",
+      "doc_id": "ab82bae095324b38",
+      "sha256_16": "ab82bae095324b38",
+      "page_count": 13,
+      "chunks_stored": 71
+    },
+    {
+      "file": "jesc113.pdf",
+      "doc_id": "3f61f0574e60bb8f",
+      "sha256_16": "3f61f0574e60bb8f",
+      "page_count": 10,
+      "chunks_stored": 47
+    }
+  ],
+  "total_chunks": 883,
+  "skipped": [
+    {
+      "file": "jesc104.pdf",
+      "error": "PdfReadError: Invalid Elementary Object starting with b'\\x0c' @1740365: b'\\r\\x00DI\\r\\x00DH\\r\\x00CG\\r\\x00BF\\r\\x00AE\\x0c\\x00AE\\x0c\\x00@D\\x0c\\x00?C\\x0c\\x00?B\\x0c\\x00?B\\x0c\\x00>A\\x0c\\x00=@\\x0c\\x00<>\\x0c\\x00<>\\x0c\\x00<>\\x0c\\x00;<\\x0c\\x00;<\\x0c\\x00;;\\x0c\\x00:;\\x0c\\x00:;'"
+    }
+  ]
+}
