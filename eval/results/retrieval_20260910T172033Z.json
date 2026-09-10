@@ -1,0 +1,543 @@
+{
+  "timestamp": "2026-09-10T17:12:10.540048+00:00",
+  "golden_set_size": 39,
+  "golden_set_metadata": {
+    "session_id": "eval-corpus-v1",
+    "size": 39,
+    "construction": "chunk_anchored_generated_human_verified",
+    "reviewed": 51,
+    "rejected": 11,
+    "acceptance_rate": 0.784,
+    "label_type": "single anchor chunk per question (lower bound on recall)",
+    "reference_answers": false,
+    "last_updated": "2026-09-10T16:46:27.887847+00:00",
+    "notes": "q003 removed post-review: duplicate anchor page with q045 (jesc109 p13, same activity)"
+  },
+  "config": {
+    "retriever_k": 5,
+    "rerank_top_n": 5,
+    "chunk_size": 512,
+    "chunk_overlap": 50,
+    "embedding_model": "BAAI/bge-small-en-v1.5",
+    "utility_model": "openai/gpt-oss-20b"
+  },
+  "arms": {
+    "fusion": {
+      "metrics": {
+        "hit_rate@1": 0.641,
+        "hit_rate@3": 0.8974,
+        "hit_rate@5": 0.9487,
+        "mrr": 0.7735,
+        "n_questions": 39,
+        "retrieval_p50_seconds": 5.917
+      },
+      "per_question": [
+        {
+          "id": "q001",
+          "rank": 2,
+          "retrieved": 5,
+          "retrieval_seconds": 3.742
+        },
+        {
+          "id": "q002",
+          "rank": 1,
+          "retrieved": 5,
+          "retrieval_seconds": 1.605
+        },
+        {
+          "id": "q004",
+          "rank": 1,
+          "retrieved": 5,
+          "retrieval_seconds": 1.704
+        },
+        {
+          "id": "q005",
+          "rank": 1,
+          "retrieved": 5,
+          "retrieval_seconds": 1.79
+        },
+        {
+          "id": "q006",
+          "rank": 1,
+          "retrieved": 5,
+          "retrieval_seconds": 1.738
+        },
+        {
+          "id": "q007",
+          "rank": 1,
+          "retrieved": 5,
+          "retrieval_seconds": 1.328
+        },
+        {
+          "id": "q008",
+          "rank": 1,
+          "retrieved": 5,
+          "retrieval_seconds": 2.356
+        },
+        {
+          "id": "q011",
+          "rank": 1,
+          "retrieved": 5,
+          "retrieval_seconds": 2.059
+        },
+        {
+          "id": "q012",
+          "rank": 1,
+          "retrieved": 5,
+          "retrieval_seconds": 2.657
+        },
+        {
+          "id": "q013",
+          "rank": 4,
+          "retrieved": 5,
+          "retrieval_seconds": 2.328
+        },
+        {
+          "id": "q014",
+          "rank": 1,
+          "retrieved": 5,
+          "retrieval_seconds": 1.462
+        },
+        {
+          "id": "q015",
+          "rank": null,
+          "retrieved": 5,
+          "retrieval_seconds": 5.492
+        },
+        {
+          "id": "q019",
+          "rank": 1,
+          "retrieved": 5,
+          "retrieval_seconds": 10.995
+        },
+        {
+          "id": "q020",
+          "rank": 1,
+          "retrieved": 5,
+          "retrieval_seconds": 7.918
+        },
+        {
+          "id": "q021",
+          "rank": 1,
+          "retrieved": 5,
+          "retrieval_seconds": 7.786
+        },
+        {
+          "id": "q022",
+          "rank": 1,
+          "retrieved": 5,
+          "retrieval_seconds": 7.986
+        },
+        {
+          "id": "q025",
+          "rank": 2,
+          "retrieved": 5,
+          "retrieval_seconds": 8.193
+        },
+        {
+          "id": "q026",
+          "rank": 2,
+          "retrieved": 5,
+          "retrieval_seconds": 8.38
+        },
+        {
+          "id": "q027",
+          "rank": 1,
+          "retrieved": 5,
+          "retrieval_seconds": 7.384
+        },
+        {
+          "id": "q028",
+          "rank": 1,
+          "retrieved": 5,
+          "retrieval_seconds": 6.041
+        },
+        {
+          "id": "q029",
+          "rank": 4,
+          "retrieved": 5,
+          "retrieval_seconds": 7.681
+        },
+        {
+          "id": "q031",
+          "rank": 2,
+          "retrieved": 5,
+          "retrieval_seconds": 4.844
+        },
+        {
+          "id": "q032",
+          "rank": 1,
+          "retrieved": 5,
+          "retrieval_seconds": 10.991
+        },
+        {
+          "id": "q033",
+          "rank": 1,
+          "retrieved": 5,
+          "retrieval_seconds": 5.451
+        },
+        {
+          "id": "q035",
+          "rank": 1,
+          "retrieved": 5,
+          "retrieval_seconds": 5.698
+        },
+        {
+          "id": "q036",
+          "rank": null,
+          "retrieved": 5,
+          "retrieval_seconds": 5.917
+        },
+        {
+          "id": "q037",
+          "rank": 2,
+          "retrieved": 5,
+          "retrieval_seconds": 6.582
+        },
+        {
+          "id": "q038",
+          "rank": 2,
+          "retrieved": 5,
+          "retrieval_seconds": 9.552
+        },
+        {
+          "id": "q041",
+          "rank": 3,
+          "retrieved": 5,
+          "retrieval_seconds": 6.01
+        },
+        {
+          "id": "q042",
+          "rank": 2,
+          "retrieved": 5,
+          "retrieval_seconds": 7.153
+        },
+        {
+          "id": "q043",
+          "rank": 1,
+          "retrieved": 5,
+          "retrieval_seconds": 4.164
+        },
+        {
+          "id": "q044",
+          "rank": 1,
+          "retrieved": 5,
+          "retrieval_seconds": 9.402
+        },
+        {
+          "id": "q045",
+          "rank": 1,
+          "retrieved": 5,
+          "retrieval_seconds": 7.501
+        },
+        {
+          "id": "q046",
+          "rank": 1,
+          "retrieved": 5,
+          "retrieval_seconds": 3.065
+        },
+        {
+          "id": "q047",
+          "rank": 2,
+          "retrieved": 5,
+          "retrieval_seconds": 6.564
+        },
+        {
+          "id": "q048",
+          "rank": 1,
+          "retrieved": 5,
+          "retrieval_seconds": 5.391
+        },
+        {
+          "id": "q049",
+          "rank": 3,
+          "retrieved": 5,
+          "retrieval_seconds": 5.495
+        },
+        {
+          "id": "q050",
+          "rank": 1,
+          "retrieved": 5,
+          "retrieval_seconds": 6.306
+        },
+        {
+          "id": "q052",
+          "rank": 1,
+          "retrieved": 5,
+          "retrieval_seconds": 9.32
+        }
+      ]
+    },
+    "reranked": {
+      "metrics": {
+        "hit_rate@1": 0.3077,
+        "hit_rate@3": 0.5641,
+        "hit_rate@5": 0.6667,
+        "mrr": 0.4444,
+        "n_questions": 39,
+        "retrieval_p50_seconds": 4.202
+      },
+      "per_question": [
+        {
+          "id": "q001",
+          "rank": 1,
+          "retrieved": 5,
+          "retrieval_seconds": 6.88
+        },
+        {
+          "id": "q002",
+          "rank": 1,
+          "retrieved": 5,
+          "retrieval_seconds": 4.21
+        },
+        {
+          "id": "q004",
+          "rank": 2,
+          "retrieved": 5,
+          "retrieval_seconds": 7.639
+        },
+        {
+          "id": "q005",
+          "rank": null,
+          "retrieved": 5,
+          "retrieval_seconds": 4.204
+        },
+        {
+          "id": "q006",
+          "rank": 3,
+          "retrieved": 5,
+          "retrieval_seconds": 25.194
+        },
+        {
+          "id": "q007",
+          "rank": null,
+          "retrieved": 5,
+          "retrieval_seconds": 3.286
+        },
+        {
+          "id": "q008",
+          "rank": 1,
+          "retrieved": 5,
+          "retrieval_seconds": 59.797
+        },
+        {
+          "id": "q011",
+          "rank": 1,
+          "retrieved": 5,
+          "retrieval_seconds": 4.051
+        },
+        {
+          "id": "q012",
+          "rank": null,
+          "retrieved": 5,
+          "retrieval_seconds": 22.3
+        },
+        {
+          "id": "q013",
+          "rank": null,
+          "retrieved": 5,
+          "retrieval_seconds": 4.066
+        },
+        {
+          "id": "q014",
+          "rank": 4,
+          "retrieved": 5,
+          "retrieval_seconds": 4.109
+        },
+        {
+          "id": "q015",
+          "rank": null,
+          "retrieved": 5,
+          "retrieval_seconds": 4.202
+        },
+        {
+          "id": "q019",
+          "rank": 1,
+          "retrieved": 5,
+          "retrieval_seconds": 4.108
+        },
+        {
+          "id": "q020",
+          "rank": 2,
+          "retrieved": 5,
+          "retrieval_seconds": 6.611
+        },
+        {
+          "id": "q021",
+          "rank": 2,
+          "retrieved": 5,
+          "retrieval_seconds": 5.082
+        },
+        {
+          "id": "q022",
+          "rank": null,
+          "retrieved": 5,
+          "retrieval_seconds": 4.165
+        },
+        {
+          "id": "q025",
+          "rank": null,
+          "retrieved": 5,
+          "retrieval_seconds": 4.568
+        },
+        {
+          "id": "q026",
+          "rank": null,
+          "retrieved": 5,
+          "retrieval_seconds": 3.481
+        },
+        {
+          "id": "q027",
+          "rank": 1,
+          "retrieved": 5,
+          "retrieval_seconds": 3.913
+        },
+        {
+          "id": "q028",
+          "rank": 2,
+          "retrieved": 5,
+          "retrieval_seconds": 3.829
+        },
+        {
+          "id": "q029",
+          "rank": null,
+          "retrieved": 5,
+          "retrieval_seconds": 3.58
+        },
+        {
+          "id": "q031",
+          "rank": 1,
+          "retrieved": 5,
+          "retrieval_seconds": 4.356
+        },
+        {
+          "id": "q032",
+          "rank": 4,
+          "retrieved": 5,
+          "retrieval_seconds": 3.587
+        },
+        {
+          "id": "q033",
+          "rank": 4,
+          "retrieved": 5,
+          "retrieval_seconds": 2.911
+        },
+        {
+          "id": "q035",
+          "rank": 1,
+          "retrieved": 5,
+          "retrieval_seconds": 3.566
+        },
+        {
+          "id": "q036",
+          "rank": null,
+          "retrieved": 5,
+          "retrieval_seconds": 3.731
+        },
+        {
+          "id": "q037",
+          "rank": 2,
+          "retrieved": 5,
+          "retrieval_seconds": 3.483
+        },
+        {
+          "id": "q038",
+          "rank": 3,
+          "retrieved": 5,
+          "retrieval_seconds": 3.729
+        },
+        {
+          "id": "q041",
+          "rank": 1,
+          "retrieved": 5,
+          "retrieval_seconds": 3.805
+        },
+        {
+          "id": "q042",
+          "rank": 3,
+          "retrieved": 5,
+          "retrieval_seconds": 6.675
+        },
+        {
+          "id": "q043",
+          "rank": null,
+          "retrieved": 5,
+          "retrieval_seconds": 3.933
+        },
+        {
+          "id": "q044",
+          "rank": 1,
+          "retrieved": 5,
+          "retrieval_seconds": 10.31
+        },
+        {
+          "id": "q045",
+          "rank": 1,
+          "retrieved": 5,
+          "retrieval_seconds": 6.843
+        },
+        {
+          "id": "q046",
+          "rank": 2,
+          "retrieved": 5,
+          "retrieval_seconds": 8.082
+        },
+        {
+          "id": "q047",
+          "rank": 3,
+          "retrieved": 5,
+          "retrieval_seconds": 3.557
+        },
+        {
+          "id": "q048",
+          "rank": null,
+          "retrieved": 5,
+          "retrieval_seconds": 8.154
+        },
+        {
+          "id": "q049",
+          "rank": null,
+          "retrieved": 5,
+          "retrieval_seconds": 6.865
+        },
+        {
+          "id": "q050",
+          "rank": 1,
+          "retrieved": 5,
+          "retrieval_seconds": 5.776
+        },
+        {
+          "id": "q052",
+          "rank": 4,
+          "retrieved": 5,
+          "retrieval_seconds": 4.536
+        }
+      ]
+    }
+  },
+  "rerank_ablation": {
+    "hit_rate@1": {
+      "before": 0.641,
+      "after": 0.3077,
+      "absolute": -0.3333,
+      "relative_pct": -52.0
+    },
+    "hit_rate@3": {
+      "before": 0.8974,
+      "after": 0.5641,
+      "absolute": -0.3333,
+      "relative_pct": -37.1
+    },
+    "hit_rate@5": {
+      "before": 0.9487,
+      "after": 0.6667,
+      "absolute": -0.282,
+      "relative_pct": -29.7
+    },
+    "mrr": {
+      "before": 0.7735,
+      "after": 0.4444,
+      "absolute": -0.3291
+    }
+  }
+}
