@@ -58,7 +58,17 @@ def _identity_rerank(question, chunks):
 
 
 def chunk_key(metadata: dict) -> str:
-    return f"{metadata.get('doc_id')}::{metadata.get('chunk_index')}"
+    """Stable identity for one chunk.
+
+    `chunk_index` restarts at 0 on every page (ingestion.py:70 enumerates
+    within the per-page split loop), so page must be part of the key or
+    chunks from different pages collide.
+    """
+    return (
+        f"{metadata.get('doc_id')}"
+        f"::{metadata.get('page')}"
+        f"::{metadata.get('chunk_index')}"
+    )
 
 
 def rank_of_anchor(results, relevant_ids: set[str]) -> int | None:

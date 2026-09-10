@@ -59,7 +59,13 @@ QUESTION_PROMPT = PromptTemplate(
 
 
 def chunk_key(metadata: dict) -> str:
-    return f"{metadata.get('doc_id')}::{metadata.get('chunk_index')}"
+    """Must stay identical to retrieval_eval.chunk_key — labels are matched by
+    string equality, so any divergence silently produces 0.0 hit-rate."""
+    return (
+        f"{metadata.get('doc_id')}"
+        f"::{metadata.get('page')}"
+        f"::{metadata.get('chunk_index')}"
+    )
 
 
 def main() -> int:
