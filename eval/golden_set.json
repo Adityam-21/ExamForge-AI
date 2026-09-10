@@ -1,0 +1,484 @@
+{
+  "items": [
+    {
+      "id": "q001",
+      "question": "What happens inside a battery that allows it to keep an electric current flowing in a circuit?",
+      "relevant_chunk_ids": [
+        "640a680a24070d4a::3::2"
+      ],
+      "source_doc": "jesc111.pdf",
+      "page": 3,
+      "provenance": "chunk_anchored_generated",
+      "reviewed": true,
+      "reference_answer": null
+    },
+    {
+      "id": "q002",
+      "question": "Why do scientists say that tiny, invisible movements are essential for living organisms?",
+      "relevant_chunk_ids": [
+        "685ec7228afeb79d::1::2"
+      ],
+      "source_doc": "jesc105.pdf",
+      "page": 1,
+      "provenance": "chunk_anchored_generated",
+      "reviewed": true,
+      "reference_answer": null
+    },
+    {
+      "id": "q004",
+      "question": "What signs show that a chemical change has occurred?",
+      "relevant_chunk_ids": [
+        "9d58fa614b2d1064::1::1"
+      ],
+      "source_doc": "jesc101.pdf",
+      "page": 1,
+      "provenance": "chunk_anchored_generated",
+      "reviewed": true,
+      "reference_answer": null
+    },
+    {
+      "id": "q005",
+      "question": "What happens to lime water when you blow air through it?",
+      "relevant_chunk_ids": [
+        "685ec7228afeb79d::9::0"
+      ],
+      "source_doc": "jesc105.pdf",
+      "page": 9,
+      "provenance": "chunk_anchored_generated",
+      "reviewed": true,
+      "reference_answer": null
+    },
+    {
+      "id": "q006",
+      "question": "How does the radius of curvature of a spherical mirror relate to its focal length?",
+      "relevant_chunk_ids": [
+        "a647d66cd9dd9e76::4::0"
+      ],
+      "source_doc": "jesc109.pdf",
+      "page": 4,
+      "provenance": "chunk_anchored_generated",
+      "reviewed": true,
+      "reference_answer": null
+    },
+    {
+      "id": "q007",
+      "question": "What equation gives the resistance of a uniform metallic conductor in terms of its length, cross‑sectional area, and resistivity?",
+      "relevant_chunk_ids": [
+        "640a680a24070d4a::8::1"
+      ],
+      "source_doc": "jesc111.pdf",
+      "page": 8,
+      "provenance": "chunk_anchored_generated",
+      "reviewed": true,
+      "reference_answer": null
+    },
+    {
+      "id": "q008",
+      "question": "How does a stimulated cell send a signal to nearby cells using a chemical that diffuses and is detected by surface molecules?",
+      "relevant_chunk_ids": [
+        "bf4ddfa158e117a7::9::1"
+      ],
+      "source_doc": "jesc106.pdf",
+      "page": 9,
+      "provenance": "chunk_anchored_generated",
+      "reviewed": true,
+      "reference_answer": null
+    },
+    {
+      "id": "q011",
+      "question": "Which type of mirror can show a complete image of a large object?",
+      "relevant_chunk_ids": [
+        "a647d66cd9dd9e76::8::2"
+      ],
+      "source_doc": "jesc109.pdf",
+      "page": 8,
+      "provenance": "chunk_anchored_generated",
+      "reviewed": true,
+      "reference_answer": null
+    },
+    {
+      "id": "q012",
+      "question": "How does UV radiation lead to the creation of ozone in the upper atmosphere?",
+      "relevant_chunk_ids": [
+        "3f61f0574e60bb8f::6::0"
+      ],
+      "source_doc": "jesc113.pdf",
+      "page": 6,
+      "provenance": "chunk_anchored_generated",
+      "reviewed": true,
+      "reference_answer": null
+    },
+    {
+      "id": "q013",
+      "question": "What causes the black coating that appears on copper powder when it is heated?",
+      "relevant_chunk_ids": [
+        "9d58fa614b2d1064::12::0"
+      ],
+      "source_doc": "jesc101.pdf",
+      "page": 12,
+      "provenance": "chunk_anchored_generated",
+      "reviewed": true,
+      "reference_answer": null
+    },
+    {
+      "id": "q014",
+      "question": "What kind of lens has two surfaces that bulge inward and causes light rays to spread apart?",
+      "relevant_chunk_ids": [
+        "a647d66cd9dd9e76::17::2"
+      ],
+      "source_doc": "jesc109.pdf",
+      "page": 17,
+      "provenance": "chunk_anchored_generated",
+      "reviewed": true,
+      "reference_answer": null
+    },
+    {
+      "id": "q015",
+      "question": "How does the kind and amount of food available influence the way an organism obtains its nutrients?",
+      "relevant_chunk_ids": [
+        "685ec7228afeb79d::6::0"
+      ],
+      "source_doc": "jesc105.pdf",
+      "page": 6,
+      "provenance": "chunk_anchored_generated",
+      "reviewed": true,
+      "reference_answer": null
+    },
+    {
+      "id": "q019",
+      "question": "What do we call the process of taking in oxygen from outside the body and using it to break down food?",
+      "relevant_chunk_ids": [
+        "685ec7228afeb79d::2::3"
+      ],
+      "source_doc": "jesc105.pdf",
+      "page": 2,
+      "provenance": "chunk_anchored_generated",
+      "reviewed": true,
+      "reference_answer": null
+    },
+    {
+      "id": "q020",
+      "question": "Why do acids like HCl and HNO₃ act as acids in water, while solutions of alcohol and glucose do not?",
+      "relevant_chunk_ids": [
+        "8ce001e9cd1ab5f8::9::3"
+      ],
+      "source_doc": "jesc102.pdf",
+      "page": 9,
+      "provenance": "chunk_anchored_generated",
+      "reviewed": true,
+      "reference_answer": null
+    },
+    {
+      "id": "q021",
+      "question": "What problems arise from waste that doesn’t decompose?",
+      "relevant_chunk_ids": [
+        "3f61f0574e60bb8f::10::1"
+      ],
+      "source_doc": "jesc113.pdf",
+      "page": 10,
+      "provenance": "chunk_anchored_generated",
+      "reviewed": true,
+      "reference_answer": null
+    },
+    {
+      "id": "q022",
+      "question": "How does a typical domestic circuit provide the same voltage to each appliance?",
+      "relevant_chunk_ids": [
+        "ab82bae095324b38::11::0"
+      ],
+      "source_doc": "jesc112.pdf",
+      "page": 11,
+      "provenance": "chunk_anchored_generated",
+      "reviewed": true,
+      "reference_answer": null
+    },
+    {
+      "id": "q025",
+      "question": "What color changes do you observe when beetroot extract is added to lemon juice, soda‑water, vinegar, and baking soda solutions?",
+      "relevant_chunk_ids": [
+        "8ce001e9cd1ab5f8::19::3"
+      ],
+      "source_doc": "jesc102.pdf",
+      "page": 19,
+      "provenance": "chunk_anchored_generated",
+      "reviewed": true,
+      "reference_answer": null
+    },
+    {
+      "id": "q026",
+      "question": "What happens to the fuse wire when the current exceeds its rated value?",
+      "relevant_chunk_ids": [
+        "640a680a24070d4a::20::3"
+      ],
+      "source_doc": "jesc111.pdf",
+      "page": 20,
+      "provenance": "chunk_anchored_generated",
+      "reviewed": true,
+      "reference_answer": null
+    },
+    {
+      "id": "q027",
+      "question": "How would the motion of the metal rod change if we increased the current through it, used a stronger horseshoe magnet, or made the rod longer?",
+      "relevant_chunk_ids": [
+        "ab82bae095324b38::10::3"
+      ],
+      "source_doc": "jesc112.pdf",
+      "page": 10,
+      "provenance": "chunk_anchored_generated",
+      "reviewed": true,
+      "reference_answer": null
+    },
+    {
+      "id": "q028",
+      "question": "What do the gastric glands in the stomach secrete to aid digestion?",
+      "relevant_chunk_ids": [
+        "685ec7228afeb79d::7::4"
+      ],
+      "source_doc": "jesc105.pdf",
+      "page": 7,
+      "provenance": "chunk_anchored_generated",
+      "reviewed": true,
+      "reference_answer": null
+    },
+    {
+      "id": "q029",
+      "question": "How many electrons does chlorine have in its outermost shell?",
+      "relevant_chunk_ids": [
+        "cda8ac2d0dfd6236::11::2"
+      ],
+      "source_doc": "jesc103.pdf",
+      "page": 11,
+      "provenance": "chunk_anchored_generated",
+      "reviewed": true,
+      "reference_answer": null
+    },
+    {
+      "id": "q031",
+      "question": "What happens when you mix a barium chloride solution with a sodium sulfate solution?",
+      "relevant_chunk_ids": [
+        "9d58fa614b2d1064::11::2"
+      ],
+      "source_doc": "jesc101.pdf",
+      "page": 11,
+      "provenance": "chunk_anchored_generated",
+      "reviewed": true,
+      "reference_answer": null
+    },
+    {
+      "id": "q032",
+      "question": "What do we call the eye’s ability to change focus so it can see both near and far objects?",
+      "relevant_chunk_ids": [
+        "c8ed49fa55eedeb9::10::0"
+      ],
+      "source_doc": "jesc110.pdf",
+      "page": 10,
+      "provenance": "chunk_anchored_generated",
+      "reviewed": true,
+      "reference_answer": null
+    },
+    {
+      "id": "q033",
+      "question": "How does plaque contribute to the development of tooth decay?",
+      "relevant_chunk_ids": [
+        "685ec7228afeb79d::8::5"
+      ],
+      "source_doc": "jesc105.pdf",
+      "page": 8,
+      "provenance": "chunk_anchored_generated",
+      "reviewed": true,
+      "reference_answer": null
+    },
+    {
+      "id": "q035",
+      "question": "What do we call a uniform blend of metals or a metal with a non‑metal that is made by melting a main metal and adding other elements in fixed amounts?",
+      "relevant_chunk_ids": [
+        "cda8ac2d0dfd6236::18::4"
+      ],
+      "source_doc": "jesc103.pdf",
+      "page": 18,
+      "provenance": "chunk_anchored_generated",
+      "reviewed": true,
+      "reference_answer": null
+    },
+    {
+      "id": "q036",
+      "question": "What is the difference between organisms that produce their own food and those that depend on other organisms for food?",
+      "relevant_chunk_ids": [
+        "685ec7228afeb79d::20::2"
+      ],
+      "source_doc": "jesc105.pdf",
+      "page": 20,
+      "provenance": "chunk_anchored_generated",
+      "reviewed": true,
+      "reference_answer": null
+    },
+    {
+      "id": "q037",
+      "question": "What happens to a compass needle when you run a current through a straight wire placed perpendicular to the paper?",
+      "relevant_chunk_ids": [
+        "ab82bae095324b38::1::1"
+      ],
+      "source_doc": "jesc112.pdf",
+      "page": 1,
+      "provenance": "chunk_anchored_generated",
+      "reviewed": true,
+      "reference_answer": null
+    },
+    {
+      "id": "q038",
+      "question": "How can you locate the image of a point object using a ray diagram?",
+      "relevant_chunk_ids": [
+        "a647d66cd9dd9e76::5::2"
+      ],
+      "source_doc": "jesc109.pdf",
+      "page": 5,
+      "provenance": "chunk_anchored_generated",
+      "reviewed": true,
+      "reference_answer": null
+    },
+    {
+      "id": "q041",
+      "question": "What is the main function of ozone in the upper atmosphere?",
+      "relevant_chunk_ids": [
+        "3f61f0574e60bb8f::5::3"
+      ],
+      "source_doc": "jesc113.pdf",
+      "page": 5,
+      "provenance": "chunk_anchored_generated",
+      "reviewed": true,
+      "reference_answer": null
+    },
+    {
+      "id": "q042",
+      "question": "What happens to energy as it moves from autotrophs to other organisms in an ecosystem?",
+      "relevant_chunk_ids": [
+        "3f61f0574e60bb8f::3::2"
+      ],
+      "source_doc": "jesc113.pdf",
+      "page": 3,
+      "provenance": "chunk_anchored_generated",
+      "reviewed": true,
+      "reference_answer": null
+    },
+    {
+      "id": "q043",
+      "question": "What sign convention is used for spherical lenses?",
+      "relevant_chunk_ids": [
+        "a647d66cd9dd9e76::22::0"
+      ],
+      "source_doc": "jesc109.pdf",
+      "page": 22,
+      "provenance": "chunk_anchored_generated",
+      "reviewed": true,
+      "reference_answer": null
+    },
+    {
+      "id": "q044",
+      "question": "How does the eye convert light into signals that the brain can interpret?",
+      "relevant_chunk_ids": [
+        "c8ed49fa55eedeb9::2::0"
+      ],
+      "source_doc": "jesc110.pdf",
+      "page": 2,
+      "provenance": "chunk_anchored_generated",
+      "reviewed": true,
+      "reference_answer": null
+    },
+    {
+      "id": "q045",
+      "question": "What changes do you notice in the line when a glass slab is placed over it at an angle compared to when the slab is placed perpendicular to the line?",
+      "relevant_chunk_ids": [
+        "a647d66cd9dd9e76::13::3"
+      ],
+      "source_doc": "jesc109.pdf",
+      "page": 13,
+      "provenance": "chunk_anchored_generated",
+      "reviewed": true,
+      "reference_answer": null
+    },
+    {
+      "id": "q046",
+      "question": "Which two organs in the human body produce a magnetic field strong enough to be used for imaging?",
+      "relevant_chunk_ids": [
+        "ab82bae095324b38::10::5"
+      ],
+      "source_doc": "jesc112.pdf",
+      "page": 10,
+      "provenance": "chunk_anchored_generated",
+      "reviewed": true,
+      "reference_answer": null
+    },
+    {
+      "id": "q047",
+      "question": "How does blocking your nose change the way you taste sugar?",
+      "relevant_chunk_ids": [
+        "bf4ddfa158e117a7::2::3"
+      ],
+      "source_doc": "jesc106.pdf",
+      "page": 2,
+      "provenance": "chunk_anchored_generated",
+      "reviewed": true,
+      "reference_answer": null
+    },
+    {
+      "id": "q048",
+      "question": "How is an ammeter connected in a circuit to measure electric current?",
+      "relevant_chunk_ids": [
+        "640a680a24070d4a::2::1"
+      ],
+      "source_doc": "jesc111.pdf",
+      "page": 2,
+      "provenance": "chunk_anchored_generated",
+      "reviewed": true,
+      "reference_answer": null
+    },
+    {
+      "id": "q049",
+      "question": "What are the two main categories of elements that together make up an ecosystem?",
+      "relevant_chunk_ids": [
+        "3f61f0574e60bb8f::1::2"
+      ],
+      "source_doc": "jesc113.pdf",
+      "page": 1,
+      "provenance": "chunk_anchored_generated",
+      "reviewed": true,
+      "reference_answer": null
+    },
+    {
+      "id": "q050",
+      "question": "What can we conclude about oxides that don’t contain metals when they react with a base and an acid?",
+      "relevant_chunk_ids": [
+        "8ce001e9cd1ab5f8::6::1"
+      ],
+      "source_doc": "jesc102.pdf",
+      "page": 6,
+      "provenance": "chunk_anchored_generated",
+      "reviewed": true,
+      "reference_answer": null
+    },
+    {
+      "id": "q052",
+      "question": "How does the plant use ATP to move sugars from storage tissues to growing buds?",
+      "relevant_chunk_ids": [
+        "685ec7228afeb79d::18::0"
+      ],
+      "source_doc": "jesc105.pdf",
+      "page": 18,
+      "provenance": "chunk_anchored_generated",
+      "reviewed": true,
+      "reference_answer": null
+    }
+  ],
+  "metadata": {
+    "session_id": "eval-corpus-v1",
+    "size": 39,
+    "construction": "chunk_anchored_generated_human_verified",
+    "reviewed": 51,
+    "rejected": 11,
+    "acceptance_rate": 0.784,
+    "label_type": "single anchor chunk per question (lower bound on recall)",
+    "reference_answers": false,
+    "last_updated": "2026-09-10T16:46:27.887847+00:00",
+    "notes": "q003 removed post-review: duplicate anchor page with q045 (jesc109 p13, same activity)"
+  }
+}
