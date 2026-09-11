@@ -1,35 +1,25 @@
-"""D2 - RAGAS generation-side metrics.
+"""D2 - RAGAS generation-side metrics. Pinned to the installed RAGAS 0.1.19 API.
 
-WHICH METRICS YOUR GOLDEN SET SUPPORTS
+WHICH METRICS THIS GOLDEN SET SUPPORTS
 --------------------------------------
-Your set has anchor-chunk labels and NO reference answers. That puts you here:
+Anchor-chunk labels, no reference answers. That means:
 
-  RUNNABLE NOW (no ground truth needed)
+  RUNNABLE (no ground truth needed)
     faithfulness      - is every claim in the answer supported by the retrieved
-                        context? This is the hallucination metric and it is the
-                        one that matters most for a study assistant.
-    answer_relevancy  - does the answer actually address the question asked?
+                        context? The hallucination metric, and the one that
+                        matters most for a study assistant.
+    answer_relevancy  - does the answer address the question asked?
 
-  NEEDS REFERENCE ANSWERS (not runnable yet)
-    context_recall    - did retrieval find everything the reference answer needs?
-    answer_correctness- is the answer factually right?
+  NOT RUNNABLE (needs reference answers)
+    context_recall, answer_correctness, answer_similarity
 
-  Retrieval precision is already covered deterministically by retrieval_eval.py,
-  which is cheaper and has no judge variance. Don't pay an LLM to re-measure it.
-
-If you later want the ground-truth metrics: write reference answers by hand for
-20-30 questions, from the anchor chunk, in your own words. Do NOT generate them
-with a model and call them ground truth - a model-written reference judged by a
-model is a closed loop that measures nothing.
+Retrieval precision is already measured deterministically in retrieval_eval.py,
+which is cheaper and has no judge variance. Don't pay an LLM to redo it.
 
 VARIANCE
 --------
-RAGAS uses an LLM as judge, so a single run is not a measurement. This script
-runs the suite RAGAS_RUNS times and reports mean and spread. Quote the range.
-
-API NOTE: RAGAS changes its public API between minor versions. Pin it
-(`ragas==0.2.x`) and if the imports below fail, check the installed version's
-docs rather than guessing - the concepts are stable even when names move.
+The judge is an LLM, so one run is not a measurement. This runs the suite
+EVAL_RAGAS_RUNS times and reports mean, range and spread. Quote the range.
 
 Usage:
     python -m eval.ragas_eval
@@ -47,9 +37,9 @@ from app.core import config as app_config
 from app.services.agent import run_pipeline
 
 
-def build_dataset(items):
+def build_rows(items):
     """Run the real pipeline and collect (question, answer, contexts) triples."""
-    rows = []
+    rows, abstained = [], 0
     for i, item in enumerate(items, start=1):
         try:
             result = run_pipeline(ev.EVAL_SESSION_ID, item["question"], [])
@@ -59,68 +49,87 @@ def build_dataset(items):
 
         contexts = [c["text"] for c in (result.get("citations") or []) if c.get("text")]
         if not contexts:
-            # Abstention. Excluded from faithfulness - there is no context to be
-            # faithful to. Counted separately; abstention rate is its own metric.
-            print(f"  [{i}] abstained (excluded from RAGAS)")
-            rows.append({"_abstained": True})
+            # Abstention: no context to be faithful to. Excluded from scoring,
+            # counted separately - abstention rate is its own metric.
+            print(f"  [{i}] abstained (excluded)")
+            abstained += 1
             continue
 
         rows.append(
             {
-                "user_input": item["question"],
-                "response": result["answer"],
-                "retrieved_contexts": contexts,
+                "question": item["question"],
+                "answer": result["answer"],
+                "contexts": contexts,
             }
         )
         print(f"  [{i}] collected ({len(contexts)} contexts)")
-    return rows
+    return rows, abstained
 
 
 def main() -> int:
+    from datasets import Dataset
     from langchain_groq import ChatGroq
     from ragas import evaluate
-    from ragas.dataset_schema import EvaluationDataset
+    from ragas.embeddings import LangchainEmbeddingsWrapper
     from ragas.llms import LangchainLLMWrapper
-    from ragas.metrics import Faithfulness, ResponseRelevancy
+    from ragas.metrics import answer_relevancy, faithfulness
+
+    from app.services.ingestion import embedding_model
 
     golden = json.loads(ev.GOLDEN_SET_PATH.read_text(encoding="utf-8"))
     items = golden["items"][: ev.RAGAS_SAMPLE_SIZE]
 
     print(f"Collecting pipeline outputs for {len(items)} questions...")
-    rows = build_dataset(items)
+    rows, abstained = build_rows(items)
+    total = len(rows) + abstained
+    print(
+        f"\n{len(rows)} scorable, {abstained} abstentions "
+        f"(rate {abstained / max(total, 1):.1%})\n"
+    )
 
-    abstained = sum(1 for r in rows if r.get("_abstained"))
-    scored = [r for r in rows if not r.get("_abstained")]
-    print(f"\n{len(scored)} scorable, {abstained} abstentions "
-          f"(abstention rate {abstained / max(len(rows), 1):.1%})\n")
-
-    if not scored:
+    if not rows:
         print("Nothing to score.")
         return 1
 
     judge = LangchainLLMWrapper(
-        ChatGroq(
-            model=ev.JUDGE_MODEL,
-            temperature=0,
-            api_key=app_config.GROQ_API_KEY,
-        )
+        ChatGroq(model=ev.JUDGE_MODEL, temperature=0, api_key=app_config.GROQ_API_KEY)
     )
-    metrics = [Faithfulness(llm=judge), ResponseRelevancy(llm=judge)]
-    dataset = EvaluationDataset.from_list(scored)
+    # answer_relevancy embeds generated questions in RAGAS 0.1.x. Reusing the
+    # app's local BGE model keeps this off the API and off the token budget.
+    embeddings = LangchainEmbeddingsWrapper(embedding_model)
+
+    dataset = Dataset.from_dict(
+        {
+            "question": [r["question"] for r in rows],
+            "answer": [r["answer"] for r in rows],
+            "contexts": [r["contexts"] for r in rows],
+        }
+    )
 
     runs = []
     for run_index in range(1, ev.RAGAS_RUNS + 1):
         print(f"--- RAGAS run {run_index}/{ev.RAGAS_RUNS} ---")
-        result = evaluate(dataset=dataset, metrics=metrics, llm=judge)
-        scores = {k: round(float(v), 4) for k, v in result._repr_dict.items()} \
-            if hasattr(result, "_repr_dict") else \
-            {k: round(float(v), 4) for k, v in dict(result).items()}
+        try:
+            result = evaluate(
+                dataset=dataset,
+                metrics=[faithfulness, answer_relevancy],
+                llm=judge,
+                embeddings=embeddings,
+                raise_exceptions=False,
+            )
+        except Exception as exc:  # noqa: BLE001
+            print(f"  run failed: {exc}")
+            continue
+        scores = {k: round(float(v), 4) for k, v in dict(result).items()}
         print(f"  {scores}")
         runs.append(scores)
 
-    keys = sorted({k for run in runs for k in run})
+    if not runs:
+        print("All runs failed.")
+        return 1
+
     summary = {}
-    for key in keys:
+    for key in sorted({k for run in runs for k in run}):
         values = [run[key] for run in runs if key in run]
         summary[key] = {
             "runs": values,
@@ -133,13 +142,16 @@ def main() -> int:
 
     report = {
         "timestamp": datetime.now(timezone.utc).isoformat(),
+        "ragas_version": "0.1.19",
         "judge_model": ev.JUDGE_MODEL,
         "judge_temperature": 0,
+        "embedding_model": app_config.EMBEDDING_MODEL,
         "generation_model": app_config.GENERATION_MODEL,
-        "n_questions_scored": len(scored),
+        "rerank_enabled": getattr(app_config, "RERANK_ENABLED", None),
+        "n_questions_scored": len(rows),
         "n_abstained": abstained,
-        "abstention_rate": round(abstained / max(len(rows), 1), 4),
-        "run_count": ev.RAGAS_RUNS,
+        "abstention_rate": round(abstained / max(total, 1), 4),
+        "run_count": len(runs),
         "metrics": summary,
         "metrics_not_run": {
             "context_recall": "requires reference answers - not available",
@@ -147,22 +159,24 @@ def main() -> int:
         },
     }
 
-    print("\n" + "=" * 60)
-    print(f"RAGAS  ·  judge={ev.JUDGE_MODEL}  ·  {ev.RAGAS_RUNS} runs")
-    print("=" * 60)
-    for key, stats in summary.items():
-        print(f"  {key:<22} {stats['mean']:.3f}  "
-              f"(range {stats['min']:.3f}-{stats['max']:.3f}, "
-              f"spread {stats['spread']:.3f})")
-    print("=" * 60)
+    print("\n" + "=" * 62)
+    print(f"RAGAS  judge={ev.JUDGE_MODEL}  runs={len(runs)}  n={len(rows)}")
+    print("=" * 62)
+    for key, s in summary.items():
+        print(
+            f"  {key:<20} {s['mean']:.3f}  "
+            f"(range {s['min']:.3f}-{s['max']:.3f}, spread {s['spread']:.3f})"
+        )
+    print("=" * 62)
 
     stamp = datetime.now(timezone.utc).strftime("%Y%m%dT%H%M%SZ")
-    out = ev.RESULTS_DIR / f"ragas_{stamp}.json"
-    out.write_text(json.dumps(report, indent=2), encoding="utf-8")
+    (ev.RESULTS_DIR / f"ragas_{stamp}.json").write_text(
+        json.dumps(report, indent=2), encoding="utf-8"
+    )
     (ev.RESULTS_DIR / "ragas_latest.json").write_text(
         json.dumps(report, indent=2), encoding="utf-8"
     )
-    print(f"\nWritten to {out}")
+    print(f"\nWritten to eval/results/ragas_{stamp}.json")
     return 0
 
 

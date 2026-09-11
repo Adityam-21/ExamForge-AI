@@ -1,7 +1,7 @@
 """Retrieval pipeline.
 
 Four strategies run against the session's Chroma collection and their results
-are fused, deduplicated and reranked:
+are fused and deduplicated:
 
 1. Dense       - embedding similarity over the collection.
 2. Sparse      - BM25 keyword matching over the same chunks.
@@ -11,8 +11,13 @@ are fused, deduplicated and reranked:
                  casual questions and academic prose.
 
 Dense + sparse are fused with reciprocal rank fusion via EnsembleRetriever.
-The union of all strategies is deduplicated and then reordered by a FlashRank
-cross-encoder, which is far more accurate than the first-stage scores.
+
+RE-RANKING IS DISABLED BY DEFAULT. A FlashRank cross-encoder reorder was
+measured against a 39-question chunk-anchored golden set and found to DEGRADE
+retrieval on this corpus: MRR 0.766 -> 0.399, hit-rate@1 0.641 -> 0.231
+(replicated across three runs; see docs/EVALUATION.md). It is kept behind
+config.RERANK_ENABLED so the ablation stays reproducible and so the regression
+suite can use it as a known-bad arm.
 
 Two behaviours matter for the product:
 
@@ -138,26 +143,73 @@ def deduplicate(chunks: list[Document]) -> list[Document]:
     return unique
 
 
+def _score_by_similarity(question: str, chunks: list[Document]) -> list[Document]:
+    """Attach cosine similarity to chunks when the reranker is disabled.
+
+    The abstention gate reads ``relevance_of()``, which originally only ever saw
+    the FlashRank score. With RERANK_ENABLED=false nothing writes a score, the
+    gate reads 0.0, and every question abstains - the pipeline looks healthy on
+    retrieval metrics while answering nothing. Scoring locally against the same
+    BGE embeddings keeps the gate meaningful and costs no API call.
+    """
+    if not chunks:
+        return chunks
+    try:
+        import numpy as np
+
+        from app.services.ingestion import embedding_model
+
+        query = np.asarray(embedding_model.embed_query(question), dtype=float)
+        docs = np.asarray(
+            embedding_model.embed_documents([c.page_content for c in chunks]),
+            dtype=float,
+        )
+        query = query / (np.linalg.norm(query) or 1.0)
+        docs = docs / (np.linalg.norm(docs, axis=1, keepdims=True) + 1e-12)
+        for chunk, score in zip(chunks, docs @ query):
+            chunk.metadata["similarity_score"] = float(score)
+    except Exception:  # noqa: BLE001
+        logger.warning("Similarity scoring failed", exc_info=True)
+    return chunks
+
+
 def rerank(question: str, chunks: list[Document]) -> list[Document]:
-    """Cross-encoder rerank. Falls back to first-stage order on failure."""
+    """Cross-encoder rerank. Falls back to first-stage order on failure.
+
+    Disabled by default - see the module docstring for the measurement.
+    """
     if not chunks:
         return []
     if not config.RERANK_ENABLED:
-        return chunks[: config.RERANK_TOP_N]
+        return _score_by_similarity(question, chunks[: config.RERANK_TOP_N])
     try:
         compressor = FlashrankRerank(top_n=config.RERANK_TOP_N)
         return compressor.compress_documents(documents=chunks, query=question)
     except Exception:  # noqa: BLE001
         logger.warning("Reranking failed; using fusion order", exc_info=True)
-        return chunks[: config.RERANK_TOP_N]
+        return _score_by_similarity(question, chunks[: config.RERANK_TOP_N])
 
 
 def relevance_of(chunk: Document) -> float:
-    score = chunk.metadata.get("relevance_score")
-    try:
-        return float(score)
-    except (TypeError, ValueError):
-        return 0.0
+    """Relevance score for a chunk, used by the abstention gate and citations.
+
+    Two sources, in order of preference:
+      1. ``relevance_score`` written by the FlashRank reranker.
+      2. ``similarity_score`` written by ``_score_by_similarity`` when the
+         reranker is disabled.
+
+    Note the two are on different scales - FlashRank emits a cross-encoder
+    score, this emits cosine similarity - so MIN_RELEVANCE_SCORE means
+    something slightly different in each mode. Recorded in EVALUATION.md.
+    """
+    for key in ("relevance_score", "similarity_score"):
+        value = chunk.metadata.get(key)
+        if value is not None:
+            try:
+                return float(value)
+            except (TypeError, ValueError):
+                continue
+    return 0.0
 
 
 # --- Entry point -------------------------------------------------------------
@@ -168,7 +220,7 @@ def retrieve(
     question: str,
     on_stage: StageCallback | None = None,
 ) -> list[Document]:
-    """Run the full pipeline and return the reranked top chunks.
+    """Run the full pipeline and return the top chunks.
 
     Returns an empty list when the session has no indexed content or nothing
     matched, so the caller can report insufficient evidence rather than letting
