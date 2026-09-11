@@ -1,0 +1,32 @@
+{
+  "timestamp": "2026-09-11T09:55:10.758294+00:00",
+  "method": {
+    "sample_size_warm": 29,
+    "cold_start_ms": 8695.0,
+    "cold_excluded": true,
+    "percentile_method": "nearest-rank",
+    "measured": "end-to-end run_pipeline: condense + retrieve (4 strategies) + rerank + generate, streaming to completion",
+    "not_measured": "HTTP overhead, SSE transport, frontend render, network latency from the user",
+    "environment": "local / CI - record which when you paste this",
+    "generation_model": "openai/gpt-oss-120b",
+    "utility_model": "openai/gpt-oss-20b",
+    "retriever_k": 5,
+    "rerank_top_n": 5
+  },
+  "latency_seconds": {
+    "min": 4.322,
+    "p50": 6.921,
+    "p90": 11.354,
+    "p95": 11.869,
+    "p99": 13.76,
+    "max": 13.76,
+    "mean": 7.685,
+    "stdev": 2.617
+  },
+  "cost": {
+    "note": "Token counts not captured here. Read them from the LangSmith project (D1) and record them, or leave null. Do not estimate.",
+    "input_tokens_per_query": null,
+    "output_tokens_per_query": null,
+    "inr_per_query": null
+  }
+}

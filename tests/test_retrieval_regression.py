@@ -2,69 +2,62 @@
 
 TWO TIERS
 ---------
-  fast (default, every push)
-      ~12 questions, deterministic retrieval metrics only. No LLM judge.
-      Cost: retrieval only (Multi-Query + HyDE still call the utility model,
-      so it is not free - roughly 2 utility calls per question).
-      Runtime target: under 2 minutes.
+  fast (every push)
+      12 questions, deterministic retrieval metrics only. No LLM judge.
+      Multi-Query and HyDE still call the utility model, so it is not free.
 
   full (nightly / on-demand, marked `slow`)
-      Whole golden set plus the ablation. Still no judge - RAGAS runs
-      separately because judge variance makes it a poor build gate.
+      The whole golden set.
 
-  Run fast:  pytest tests/test_retrieval_regression.py -m "not slow"
-  Run full:  pytest tests/test_retrieval_regression.py
+  Run fast:      python -m pytest tests/test_retrieval_regression.py -m "not slow and not negative"
+  Run negative:  python -m pytest tests/test_retrieval_regression.py -m negative
+  Run full:      python -m pytest tests/test_retrieval_regression.py -m "not negative"
 
 WHY RAGAS IS NOT A BUILD GATE
 -----------------------------
 An LLM judge has run-to-run spread. A threshold tight enough to catch a real
-regression will also fire on judge noise, and a suite that cries wolf gets
-ignored or disabled within two weeks. RAGAS belongs on a dashboard you look at,
-not on a gate that blocks merges.
+regression also fires on judge noise, and a suite that cries wolf gets disabled
+within a fortnight. RAGAS belongs on a dashboard, not on a merge gate.
 
 THRESHOLDS
 ----------
-Every threshold below is DERIVED FROM A MEASURED BASELINE MINUS HEADROOM.
-Fill them in from eval/results/retrieval_latest.json after your first run.
-Do not set aspirational values - a gate you cannot pass today is a gate you
-will delete tomorrow.
+Measured baselines (fusion arm, eval/results/retrieval_latest.json, n=39):
+    hit_rate@5 = 0.949    hit_rate@3 = 0.872    MRR = 0.766
+
+Thresholds sit ~0.12 absolute below those. That headroom is deliberately wide:
+  - the fast tier runs 12 questions, so ONE question moves hit-rate by 8.3 pts
+  - Multi-Query and HyDE are LLM calls whose output varies between runs
+A tighter gate would fire on normal variation rather than on regressions.
 """
 
 from __future__ import annotations
 
 import json
-import os
-from pathlib import Path
 
 import pytest
 
 from eval import config as ev
-from eval.retrieval_eval import _identity_rerank, _REAL_RERANK, rank_of_anchor
+from eval.retrieval_eval import _REAL_RERANK, rank_of_anchor
 from app.core import config as app_config
 from app.services import retrieval
 
-# --- Thresholds ---------------------------------------------------------------
-# TODO: replace the None values with (measured baseline - headroom) after the
-# first real run. Tests fail loudly until you do, which is intentional.
-#
-# Suggested headroom: retrieval here is deterministic, so the only variance
-# comes from Multi-Query/HyDE LLM output. Observed spread across 3 runs should
-# set the headroom. Start with 0.10 absolute below baseline and tighten once
-# you have seen the actual run-to-run movement.
+# --- Thresholds --------------------------------------------------------------
 
-BASELINE = json.loads(
-    (ev.RESULTS_DIR / "retrieval_latest.json").read_text()
-) if (ev.RESULTS_DIR / "retrieval_latest.json").exists() else None
+MIN_HIT_RATE_AT_5 = 0.83
+MIN_HIT_RATE_AT_3 = 0.74
+MIN_MRR = 0.65
 
-MIN_HIT_RATE_AT_5 = None      # e.g. 0.72 if measured 0.82, headroom 0.10
-MIN_HIT_RATE_AT_3 = None
-MIN_MRR = None
-
+_BASELINE_PATH = ev.RESULTS_DIR / "retrieval_latest.json"
+BASELINE = (
+    json.loads(_BASELINE_PATH.read_text(encoding="utf-8"))
+    if _BASELINE_PATH.exists()
+    else None
+)
 
 def _load_golden(limit=None):
     if not ev.GOLDEN_SET_PATH.exists():
         pytest.skip("golden set not built")
-    items = json.loads(ev.GOLDEN_SET_PATH.read_text())["items"]
+    items = json.loads(ev.GOLDEN_SET_PATH.read_text(encoding="utf-8"))["items"]
     return items[:limit] if limit else items
 
 
@@ -83,38 +76,28 @@ def _evaluate(items):
 
 @pytest.fixture(autouse=True)
 def _restore_reranker():
+    """The production reranker is always restored, even if a test fails."""
     yield
     retrieval.rerank = _REAL_RERANK
 
 
-def test_thresholds_are_configured():
-    """Fails until thresholds come from a real measurement."""
-    assert MIN_HIT_RATE_AT_5 is not None, (
-        "Set thresholds from eval/results/retrieval_latest.json. "
-        "A regression suite with no thresholds is decoration."
-    )
+# --- Fast tier ---------------------------------------------------------------
 
 
-# --- Fast tier ----------------------------------------------------------------
-
-def test_fast_tier_hit_rate():
+def test_fast_tier_retrieval_quality():
     items = _load_golden(ev.FAST_TIER_SIZE)
     metrics = _evaluate(items)
-    print(f"\nfast tier ({len(items)} q): {metrics}")
-    assert metrics["hit_rate@5"] >= MIN_HIT_RATE_AT_5, (
-        f"hit_rate@5 {metrics['hit_rate@5']:.3f} below threshold "
-        f"{MIN_HIT_RATE_AT_5}"
-    )
-
-
-def test_fast_tier_mrr():
-    items = _load_golden(ev.FAST_TIER_SIZE)
-    metrics = _evaluate(items)
-    assert metrics["mrr"] >= MIN_MRR, f"MRR {metrics['mrr']:.3f} below {MIN_MRR}"
+    print(f"\nfast tier (n={len(items)}): {metrics}")
+    assert (
+        metrics["hit_rate@5"] >= MIN_HIT_RATE_AT_5
+    ), f"hit_rate@5 {metrics['hit_rate@5']:.3f} below threshold {MIN_HIT_RATE_AT_5}"
+    assert (
+        metrics["mrr"] >= MIN_MRR
+    ), f"MRR {metrics['mrr']:.3f} below threshold {MIN_MRR}"
 
 
 def test_config_has_not_drifted():
-    """Metrics are only comparable if the configuration that produced them holds."""
+    """Metrics are only comparable if the config that produced them still holds."""
     if not BASELINE:
         pytest.skip("no baseline recorded")
     recorded = BASELINE["config"]
@@ -124,36 +107,42 @@ def test_config_has_not_drifted():
     assert app_config.EMBEDDING_MODEL == recorded["embedding_model"]
 
 
-# --- Negative test ------------------------------------------------------------
+# --- Negative test -----------------------------------------------------------
+
 
 @pytest.mark.negative
 def test_suite_detects_degraded_retrieval():
-    """THE test that proves the suite works.
+    """Proves the suite can fail. A gate never seen to fail is not known to work.
 
-    Disables re-ranking and asserts the fast tier would now FAIL. A regression
-    suite that has never been seen to fail is not known to work.
+    The degradation is re-enabling FlashRank, which measurement showed cuts
+    retrieval quality roughly in half on this corpus.
     """
     items = _load_golden(ev.FAST_TIER_SIZE)
-    retrieval.rerank = _identity_rerank
-    degraded = _evaluate(items)
-    retrieval.rerank = _REAL_RERANK
+
+    original = app_config.RERANK_ENABLED
+    try:
+        app_config.RERANK_ENABLED = True
+        degraded = _evaluate(items)
+    finally:
+        app_config.RERANK_ENABLED = original
     healthy = _evaluate(items)
 
-    print(f"\ndegraded: {degraded}\nhealthy:  {healthy}")
-    assert healthy["hit_rate@5"] >= MIN_HIT_RATE_AT_5, "healthy arm should pass"
-    assert degraded["hit_rate@5"] < MIN_HIT_RATE_AT_5, (
-        "Degrading retrieval did NOT trip the threshold. Either the threshold "
-        "is too loose, or re-ranking is contributing less than assumed. Both "
-        "are findings worth writing down."
-    )
+    print(f"\ndegraded (FlashRank on): {degraded}")
+    print(f"healthy  (production):    {healthy}")
+
+    assert healthy["hit_rate@5"] >= MIN_HIT_RATE_AT_5
+    assert degraded["hit_rate@5"] < MIN_HIT_RATE_AT_5
+
+    retrieval.rerank = _REAL_RERANK
 
 
-# --- Full tier ----------------------------------------------------------------
+# --- Full tier ---------------------------------------------------------------
+
 
 @pytest.mark.slow
 def test_full_golden_set():
     items = _load_golden()
     metrics = _evaluate(items)
-    print(f"\nfull tier ({len(items)} q): {metrics}")
+    print(f"\nfull tier (n={len(items)}): {metrics}")
     assert metrics["hit_rate@5"] >= MIN_HIT_RATE_AT_5
     assert metrics["hit_rate@3"] >= MIN_HIT_RATE_AT_3

@@ -31,6 +31,32 @@ from app.core import config, store
 from app.services import ingestion
 from app.services.agent import run_pipeline
 
+from langsmith import traceable
+
+
+@traceable(
+    name="examforge_ask",
+    run_type="chain",
+    metadata={
+        "generation_model": config.GENERATION_MODEL,
+        "utility_model": config.UTILITY_MODEL,
+        "retriever_k": config.RETRIEVER_K,
+        "rerank_top_n": config.RERANK_TOP_N,
+        "chunk_size": config.CHUNK_SIZE,
+        "chunk_overlap": config.CHUNK_OVERLAP,
+        "embedding_model": config.EMBEDDING_MODEL,
+        "rerank_enabled": True,
+    },
+)
+def _traced_pipeline(session_id, question, memory, emit):
+    """Tagged wrapper so runs are comparable across configurations.
+
+    Untagged runs cannot be filtered by config later, which makes them
+    useless for before/after comparison.
+    """
+    return run_pipeline(session_id, question, memory, emit)
+
+
 logger = logging.getLogger(__name__)
 
 router = APIRouter(prefix="/api")
@@ -278,7 +304,7 @@ async def ask_stream(
 
         def worker() -> None:
             try:
-                result = run_pipeline(session_id, question, memory, emit)
+                result = _traced_pipeline(session_id, question, memory, emit)
                 loop.call_soon_threadsafe(queue.put_nowait, ("__done__", result))
             except Exception as exc:  # noqa: BLE001
                 logger.exception("Pipeline failed")
@@ -362,7 +388,7 @@ async def ask(conversation_id: str, body: AskRequest) -> dict[str, Any]:
 
     try:
         result = await asyncio.to_thread(
-            run_pipeline, session_id, body.question.strip(), memory, emit
+            _traced_pipeline, session_id, body.question.strip(), memory, emit
         )
     except Exception as exc:  # noqa: BLE001
         logger.exception("Pipeline failed")

@@ -46,6 +46,11 @@ MAX_UPLOAD_BYTES = int(os.getenv("MAX_UPLOAD_MB", "10")) * 1024 * 1024
 RETRIEVER_K = int(os.getenv("RETRIEVER_K", "5"))
 RERANK_TOP_N = int(os.getenv("RERANK_TOP_N", "5"))
 
+# FlashRank measurably degrades retrieval on the eval corpus
+# (MRR 0.766 -> 0.399, n=39; see docs/EVALUATION.md). Disabled by default,
+# kept behind a flag so the ablation stays reproducible.
+RERANK_ENABLED = os.getenv("RERANK_ENABLED", "false").lower() == "true"
+
 # Chunks scoring below this after reranking are treated as too weak to ground
 # an answer. Surfaced to the client as low confidence rather than hidden.
 MIN_RELEVANCE_SCORE = float(os.getenv("MIN_RELEVANCE_SCORE", "0.05"))

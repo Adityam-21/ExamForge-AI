@@ -44,6 +44,7 @@ logger = logging.getLogger(__name__)
 
 StageCallback = Callable[[str, str], None]
 
+
 @lru_cache(maxsize=1)
 def get_utility_llm() -> ChatGroq:
     """Small fast model for query transformation only.
@@ -58,6 +59,7 @@ def get_utility_llm() -> ChatGroq:
         temperature=0,
         api_key=config.GROQ_API_KEY,
     )
+
 
 HYDE_PROMPT = PromptTemplate(
     input_variables=["question"],
@@ -92,9 +94,7 @@ def _dense_and_sparse(
     bm25 = BM25Retriever.from_documents(chunks)
     bm25.k = config.RETRIEVER_K
 
-    ensemble = EnsembleRetriever(
-        retrievers=[bm25, semantic], weights=[0.5, 0.5], c=60
-    )
+    ensemble = EnsembleRetriever(retrievers=[bm25, semantic], weights=[0.5, 0.5], c=60)
     return ensemble.invoke(question)
 
 
@@ -142,6 +142,8 @@ def rerank(question: str, chunks: list[Document]) -> list[Document]:
     """Cross-encoder rerank. Falls back to first-stage order on failure."""
     if not chunks:
         return []
+    if not config.RERANK_ENABLED:
+        return chunks[: config.RERANK_TOP_N]
     try:
         compressor = FlashrankRerank(top_n=config.RERANK_TOP_N)
         return compressor.compress_documents(documents=chunks, query=question)
