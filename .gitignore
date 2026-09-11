@@ -16,6 +16,5 @@ dist/
 !.env.example
 
 # Evaluation
-eval/corpus/*.pdf
 eval/candidates.jsonl
 eval/.reviewed_ids
