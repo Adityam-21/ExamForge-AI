@@ -7,7 +7,7 @@ from pathlib import Path
 from typing import Any
 
 from langchain_community.document_loaders import PyPDFLoader
-from langchain_community.embeddings import HuggingFaceEmbeddings
+from langchain_community.embeddings import FastEmbedEmbeddings
 from langchain_community.vectorstores import Chroma
 from langchain_core.documents import Document
 from langchain_text_splitters import RecursiveCharacterTextSplitter
@@ -19,10 +19,10 @@ logger = logging.getLogger(__name__)
 # Re-exported for backwards compatibility with existing imports.
 CHROMA_PATH = config.CHROMA_PATH
 
-embedding_model = HuggingFaceEmbeddings(
+embedding_model = FastEmbedEmbeddings(
     model_name=config.EMBEDDING_MODEL,
-    model_kwargs={"device": "cpu"},
-    encode_kwargs={"normalize_embeddings": True, "batch_size": 32},
+    cache_dir=f"{config.MODEL_CACHE_DIR}/fastembed",
+    threads=1,
 )
 
 

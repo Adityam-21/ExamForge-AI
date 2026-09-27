@@ -29,6 +29,12 @@ DATABASE_PATH = os.getenv("DATABASE_PATH", str(DATA_DIR / "examforge.db"))
 
 EMBEDDING_MODEL = os.getenv("EMBEDDING_MODEL", "BAAI/bge-small-en-v1.5")
 
+# Where fastembed / FlashRank weights live. The Dockerfile bakes them into /app/.cache.
+MODEL_CACHE_DIR = os.getenv("MODEL_CACHE_DIR", ".cache")
+
+# Small cross-encoder (~34 MB). FlashRank's LangChain default is much larger.
+RERANK_MODEL = os.getenv("RERANK_MODEL", "ms-marco-MiniLM-L-12-v2")
+
 # Small, fast model for query transformation (multi-query, HyDE, condensation).
 UTILITY_MODEL = os.getenv("UTILITY_MODEL", "llama-3.1-8b-instant")
 

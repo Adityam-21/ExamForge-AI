@@ -173,6 +173,18 @@ def _score_by_similarity(question: str, chunks: list[Document]) -> list[Document
     return chunks
 
 
+@lru_cache(maxsize=1)
+def get_reranker() -> FlashrankRerank:
+    """Load the cross-encoder once per process instead of on every question."""
+    from flashrank import Ranker
+
+    ranker = Ranker(
+        model_name=config.RERANK_MODEL,
+        cache_dir=f"{config.MODEL_CACHE_DIR}/flashrank",
+    )
+    return FlashrankRerank(client=ranker, top_n=config.RERANK_TOP_N)
+
+
 def rerank(question: str, chunks: list[Document]) -> list[Document]:
     """Cross-encoder rerank. Falls back to first-stage order on failure.
 
@@ -183,7 +195,7 @@ def rerank(question: str, chunks: list[Document]) -> list[Document]:
     if not config.RERANK_ENABLED:
         return _score_by_similarity(question, chunks[: config.RERANK_TOP_N])
     try:
-        compressor = FlashrankRerank(top_n=config.RERANK_TOP_N)
+        compressor = get_reranker()
         return compressor.compress_documents(documents=chunks, query=question)
     except Exception:  # noqa: BLE001
         logger.warning("Reranking failed; using fusion order", exc_info=True)

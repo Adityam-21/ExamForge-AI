@@ -14,8 +14,10 @@ langchain-groq==0.1.10
 langgraph==0.2.34
 
 # --- Embeddings + vector store -----------------------------------------------
+# fastembed runs BAAI/bge-small-en-v1.5 on ONNX Runtime instead of PyTorch,
+# which keeps the API inside a 512 MB instance (Render Free).
 chromadb==0.5.5
-sentence-transformers==3.0.1
+fastembed==0.3.6
 
 # --- Retrieval + reranking ---------------------------------------------------
 rank_bm25==0.2.2
@@ -24,6 +26,7 @@ flashrank==0.2.8
 # --- PDF ingestion -----------------------------------------------------------
 pypdf==4.2.0
 
-# Removed: ragas (no evaluation pipeline exists), reportlab (no PDF generation),
-# langsmith (tracing was never configured). Conversation state now uses stdlib
+# Removed: sentence-transformers (pulled in PyTorch, too large for 512 MB),
+# ragas (no evaluation pipeline exists), reportlab (no PDF generation),
+# langsmith (tracing was never configured). Conversation state uses stdlib
 # sqlite3, so no database dependency is required.

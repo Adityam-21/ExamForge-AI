@@ -22,6 +22,7 @@ sys.path.insert(0, os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 
 # --- Stub the ML boundary ----------------------------------------------------
 
+
 class _Doc:
     def __init__(self, page_content="", metadata=None):
         self.page_content = page_content
@@ -46,37 +47,48 @@ class _Stub:
         return self
 
 
-_mod("langchain_core")
+_mod("langchain_core", __version__="0.2.43")
 _mod("langchain_core.documents", Document=_Doc)
 _mod("langchain_core.prompts", PromptTemplate=_Stub)
 _mod("langchain_groq", ChatGroq=_Stub)
 
 
 class _SG(_Stub):
-    def add_node(self, *a, **k): pass
-    def set_entry_point(self, *a): pass
-    def add_edge(self, *a): pass
-    def compile(self): return object()
+    def add_node(self, *a, **k):
+        pass
+
+    def set_entry_point(self, *a):
+        pass
+
+    def add_edge(self, *a):
+        pass
+
+    def compile(self):
+        return object()
 
 
 _mod("langgraph")
 _mod("langgraph.graph", StateGraph=_SG, END="END")
 _mod("langchain")
-_mod("langchain.retrievers", EnsembleRetriever=_Stub, ContextualCompressionRetriever=_Stub)
+_mod(
+    "langchain.retrievers",
+    EnsembleRetriever=_Stub,
+    ContextualCompressionRetriever=_Stub,
+)
 _mod("langchain.retrievers.multi_query", MultiQueryRetriever=_Stub)
 _mod("langchain_community")
 _mod("langchain_community.document_compressors", FlashrankRerank=_Stub)
 _mod("langchain_community.retrievers", BM25Retriever=_Stub)
 _mod("langchain_community.vectorstores", Chroma=_Stub)
-_mod("langchain_community.embeddings", HuggingFaceEmbeddings=lambda **k: None)
+_mod("langchain_community.embeddings", FastEmbedEmbeddings=lambda **k: None)
 _mod("langchain_community.document_loaders", PyPDFLoader=_Stub)
 _mod("langchain_text_splitters", RecursiveCharacterTextSplitter=_Stub)
 
 from app.core import config  # noqa: E402
 from app.services import agent  # noqa: E402
 
-
 # --- Controllable fake generation LLM ---------------------------------------
+
 
 class _FakeStreamPart:
     def __init__(self, content):
@@ -145,12 +157,17 @@ strong = [
 ]
 events, cfg = _collect_emits()
 result = agent.generation_node(
-    {"question": "What is Gauss's law?", "search_query": "What is Gauss's law?",
-     "context": strong},
+    {
+        "question": "What is Gauss's law?",
+        "search_query": "What is Gauss's law?",
+        "context": strong,
+    },
     cfg,
 )
 check("LLM was called for strong evidence", _FakeLLM.called)
-check("answer is the generated text", result["answer"].startswith("This is a confident"))
+check(
+    "answer is the generated text", result["answer"].startswith("This is a confident")
+)
 check("grounded is True", result["grounded"] is True)
 check("citations present", len(result["citations"]) == 2)
 check("cited source flagged", any(c["cited"] for c in result["citations"]))
@@ -166,13 +183,15 @@ weak = [
 ]
 events, cfg = _collect_emits()
 result = agent.generation_node(
-    {"question": "What is the capital of France?",
-     "search_query": "What is the capital of France?", "context": weak},
+    {
+        "question": "What is the capital of France?",
+        "search_query": "What is the capital of France?",
+        "context": weak,
+    },
     cfg,
 )
 check("LLM was NOT called on weak evidence", _FakeLLM.called is False)
-check("answer is the abstention message",
-      result["answer"] == agent.NO_EVIDENCE_MESSAGE)
+check("answer is the abstention message", result["answer"] == agent.NO_EVIDENCE_MESSAGE)
 check("grounded is False when abstaining", result["grounded"] is False)
 check("citations empty when abstaining", result["citations"] == [])
 
@@ -187,13 +206,18 @@ borderline = [
 ]
 events, cfg = _collect_emits()
 result = agent.generation_node(
-    {"question": "borderline question", "search_query": "borderline question",
-     "context": borderline},
+    {
+        "question": "borderline question",
+        "search_query": "borderline question",
+        "context": borderline,
+    },
     cfg,
 )
 check("LLM called at exactly threshold (borderline preserved)", _FakeLLM.called)
-check("borderline answer is generated, not abstained",
-      result["answer"] != agent.NO_EVIDENCE_MESSAGE)
+check(
+    "borderline answer is generated, not abstained",
+    result["answer"] != agent.NO_EVIDENCE_MESSAGE,
+)
 
 
 # --- 3b. Just below threshold -> abstains ------------------------------------
@@ -214,7 +238,9 @@ check("abstains just below threshold", result["answer"] == agent.NO_EVIDENCE_MES
 print("\n--- empty retrieval -> abstains ---")
 _install_fake_llm()
 events, cfg = _collect_emits()
-result = agent.generation_node({"question": "q", "search_query": "q", "context": []}, cfg)
+result = agent.generation_node(
+    {"question": "q", "search_query": "q", "context": []}, cfg
+)
 check("LLM NOT called on empty retrieval", _FakeLLM.called is False)
 check("empty retrieval abstains", result["answer"] == agent.NO_EVIDENCE_MESSAGE)
 check("empty retrieval grounded False", result["grounded"] is False)
@@ -226,16 +252,17 @@ check("empty retrieval citations empty", result["citations"] == [])
 print("\n--- abstention still emits valid stage + token events ---")
 _install_fake_llm()
 events, cfg = _collect_emits()
-agent.generation_node(
-    {"question": "q", "search_query": "q", "context": weak}, cfg
-)
+agent.generation_node({"question": "q", "search_query": "q", "context": weak}, cfg)
 names = [e for e, _ in events]
 check("emits a 'stage' event", "stage" in names)
-check("stage is 'generating'",
-      any(p.get("stage") == "generating" for e, p in events if e == "stage"))
-check("emits a 'token' event with the abstention text",
-      any(e == "token" and p.get("text") == agent.NO_EVIDENCE_MESSAGE
-          for e, p in events))
+check(
+    "stage is 'generating'",
+    any(p.get("stage") == "generating" for e, p in events if e == "stage"),
+)
+check(
+    "emits a 'token' event with the abstention text",
+    any(e == "token" and p.get("text") == agent.NO_EVIDENCE_MESSAGE for e, p in events),
+)
 
 
 # --- 6. Node sequence: retrieval_node -> generation_node keeps SSE contract ---
