@@ -36,7 +36,7 @@ MODEL_CACHE_DIR = os.getenv("MODEL_CACHE_DIR", ".cache")
 RERANK_MODEL = os.getenv("RERANK_MODEL", "ms-marco-MiniLM-L-12-v2")
 
 # Small, fast model for query transformation (multi-query, HyDE, condensation).
-UTILITY_MODEL = os.getenv("UTILITY_MODEL", "llama-3.1-8b-instant")
+UTILITY_MODEL = os.getenv("UTILITY_MODEL", "openai/gpt-oss-20b")
 
 # Larger model for the final grounded answer.
 GENERATION_MODEL = os.getenv("GENERATION_MODEL", "openai/gpt-oss-120b")

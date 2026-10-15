@@ -18,3 +18,5 @@ dist/
 # Evaluation
 eval/candidates.jsonl
 eval/.reviewed_ids
+.cache/
+eval_run*.log
